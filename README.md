@@ -71,14 +71,25 @@ src/
 ### Enterprises
 | Método | Rota |
 |--------|------|
+| POST | /enterprises |
 | GET | /enterprises |
+| GET | /enterprises/:uuid |
 | GET | /enterprises/analytics/ranking |
 
 ### Leads
 | Método | Rota |
 |--------|------|
-| POST | /leads |
+| POST   | /leads |
+| GET   | /leads  |
+| GET   | /leads/:mail  |
+| GET   | /leads/enterprise |
 
+### Users
+| Método | Rota |
+|--------|------|
+| POST | /users |
+| GET | /users |
+| GET | /users/:mail |
 ---
 
 ## 🛠 Tecnologias
@@ -95,7 +106,9 @@ src/
 
 ### 1. Clone
 ```bash
+
 git clone https://github.com/seu-usuario/tech-flow-api.git
+
 cd tech-flow-api
 ```
 
