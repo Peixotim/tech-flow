@@ -7,6 +7,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Joi, * as joi from 'joi';
+import { CryptoModule } from 'src/crypto/crypto.module';
+import { UsersModule } from 'src/users/users.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -58,6 +60,8 @@ import Joi, * as joi from 'joi';
         synchronize: true, //Lembrete meu : Desativar quando subir para prod
       }),
     }),
+    CryptoModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [
