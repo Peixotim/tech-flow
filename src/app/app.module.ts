@@ -1,4 +1,5 @@
-import { Logger, Module, OnModuleInit } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { LoggerModule } from 'nestjs-pino';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -6,9 +7,26 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Joi, * as joi from 'joi';
-import { DataSource } from 'typeorm';
 @Module({
   imports: [
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? {
+                target: 'pino-pretty',
+                options: {
+                  colorize: true,
+                  singleLine: true,
+                  translateTime: 'SYS:standard',
+                  ignore: 'pid,hostname',
+                  messageFormat: '{msg} {context}',
+                },
+              }
+            : undefined,
+        autoLogging: false, //Deixa mais limpo o terminal
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: joi.object({
@@ -50,26 +68,4 @@ import { DataSource } from 'typeorm';
     },
   ],
 })
-export class AppModule implements OnModuleInit {
-  private readonly logger = new Logger('Database-Connection'); //Nome que aparece antes das logs
-  constructor(private dataSource: DataSource) {}
-
-  public onModuleInit() {
-    try {
-      if (this.dataSource.isInitialized) {
-        this.logger.log(
-          '✅ Conexão com o banco de dados estabelecida com sucesso!',
-        );
-      } else {
-        this.logger.warn(
-          '⚠️ A conexão com o banco ainda não foi inicializada.',
-        );
-      }
-    } catch (erro) {
-      const error = erro as Error;
-      this.logger.error(
-        `❌ Erro ao conectar ao banco de dados: ${error.message}`,
-      );
-    }
-  } //Quando iniciar a aplicacao ja roda
-}
+export class AppModule {}
