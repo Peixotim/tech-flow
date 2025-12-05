@@ -51,7 +51,7 @@ import { DataSource } from 'typeorm';
   ],
 })
 export class AppModule implements OnModuleInit {
-  private readonly logger = new Logger('DatabaseConnection');
+  private readonly logger = new Logger('Database-Connection'); //Nome que aparece antes das logs
   constructor(private dataSource: DataSource) {}
 
   public onModuleInit() {
