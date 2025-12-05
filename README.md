@@ -42,20 +42,20 @@ O **Tech Flow API** é uma plataforma backend desenvolvida para centralizar, ana
 src/
 │
 ├── auth/
-│   ├── controllers
-│   └── services
+│   ├── 
+│   └── 
 │
 ├── users/
-│   ├── admin
-│   └── operators
+│   ├── 
+│   └── 
 │
 ├── enterprises/
-│   ├── crud
-│   └── analytics
+│   ├── 
+│   └── 
 │
 └── leads/
-    ├── ingestion
-    └── assignment
+    ├── 
+    └── 
 ```
 
 ---
