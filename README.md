@@ -90,6 +90,7 @@ src/
 | POST | /users |
 | GET | /users |
 | GET | /users/:mail |
+| PATCH | /users/ |
 ---
 
 ## 🛠 Tecnologias
