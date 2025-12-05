@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  db:
+    container_name: techflow-database
+    image: postgres:15-alpine
+    restart: always  # Reinicia automaticamente se falhar ou se o Docker reiniciar
+    ports:
+      - "5434:5432"
+    # Carrega as variáveis direto do arquivo (mais seguro e prático)
+    env_file:
+      - .env
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - tech-flow-network
+      
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+
+networks:
+  tech-flow-network:
+    driver: bridge
