@@ -6,6 +6,7 @@ import {
   Logger,
   HttpException,
   InternalServerErrorException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
 import { UsersService } from 'src/users/users.service';
@@ -15,6 +16,7 @@ import { PasswordService } from 'src/crypto/password.service';
 import { JwtPayload } from 'src/types/jwt-payload.types';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -23,12 +25,21 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly passwordService: PasswordService,
+    private readonly configService: ConfigService,
     private jwtService: JwtService,
   ) {}
 
   public async registerUser(
     registerRequest: RegisterUserDTO,
   ): Promise<UserResponseDTO> {
+    const serverSecret = this.configService.get<string>('REGISTRATION_SECRET');
+
+    if (registerRequest.secretKey !== serverSecret) {
+      throw new ForbiddenException(
+        'Access denied: Invalid or missing registration key.',
+      );
+    }
+
     const newUser = await this.usersService.createUser(registerRequest);
     return newUser;
   }
