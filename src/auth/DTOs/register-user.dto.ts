@@ -23,4 +23,8 @@ export class RegisterUserDTO {
   @MinLength(12, { message: 'Password must be at least 12 characters long.' })
   @MaxLength(72, { message: 'Password must be at most 72 characters long.' })
   password: string;
+
+  @IsString({ message: 'SecretKey must be a valid text.' })
+  @IsNotEmpty({ message: 'Registration secret is required.' })
+  secretKey: string;
 }
