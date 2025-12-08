@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import Joi, * as joi from 'joi';
 import { CryptoModule } from 'src/crypto/crypto.module';
 import { UsersModule } from 'src/users/users.module';
+import { AuthModule } from 'src/auth/auth.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -62,6 +63,7 @@ import { UsersModule } from 'src/users/users.module';
     }),
     CryptoModule,
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
