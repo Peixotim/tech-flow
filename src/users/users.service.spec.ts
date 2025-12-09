@@ -24,7 +24,6 @@ describe('UsersService', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let enterpriseService: EnterpriseService;
 
-  // Mocks dos dados
   const mockEnterprise: EnterpriseEntity = {
     uuid: 'enterprise-uuid',
     name: 'Tech Flow',
@@ -35,7 +34,7 @@ describe('UsersService', () => {
     updatedAt: new Date(),
     deletedAt: new Date(),
     users: [],
-    logoUrl: 'aaba',
+    logoUrl: 'qualquerLogo',
     primaryColor: '#000000',
   };
 
@@ -58,8 +57,6 @@ describe('UsersService', () => {
     updatedAt: new Date(),
     enterprise: mockEnterprise,
   };
-
-  // Mocks das Dependências
   const mockUsersRepository = {
     exists: jest.fn(),
     create: jest.fn(),
@@ -110,17 +107,13 @@ describe('UsersService', () => {
 
   describe('createUser', () => {
     it('should create a user successfully', async () => {
-      // Arrange
-      mockUsersRepository.exists.mockResolvedValue(false); // Usuário não existe
-      mockEnterpriseService.findByUuid.mockResolvedValue(mockEnterprise); // Empresa existe
-      mockPasswordService.hash.mockResolvedValue('hashed_password'); // Senha hasheada
-      mockUsersRepository.create.mockReturnValue(mockUserEntity); // Cria objeto
-      mockUsersRepository.save.mockResolvedValue(mockUserEntity); // Salva no banco
+      mockUsersRepository.exists.mockResolvedValue(false);
+      mockEnterpriseService.findByUuid.mockResolvedValue(mockEnterprise);
+      mockPasswordService.hash.mockResolvedValue('hashed_password');
+      mockUsersRepository.create.mockReturnValue(mockUserEntity);
+      mockUsersRepository.save.mockResolvedValue(mockUserEntity);
 
-      // Act
       const result = await service.createUser(mockUserCreateDTO);
-
-      // Assert
       expect(result).toEqual({
         uuid: mockUserEntity.uuid,
         name: mockUserEntity.name,
@@ -146,7 +139,7 @@ describe('UsersService', () => {
     });
 
     it('should throw ConflictException if email is already registered', async () => {
-      mockUsersRepository.exists.mockResolvedValue(true); // E-mail já existe
+      mockUsersRepository.exists.mockResolvedValue(true);
 
       await expect(service.createUser(mockUserCreateDTO)).rejects.toThrow(
         ConflictException,
@@ -164,13 +157,11 @@ describe('UsersService', () => {
     });
 
     it('should throw ConflictException on database unique constraint error (23505)', async () => {
-      // Simula passar pelas validações iniciais
       mockUsersRepository.exists.mockResolvedValue(false);
       mockEnterpriseService.findByUuid.mockResolvedValue(mockEnterprise);
       mockPasswordService.hash.mockResolvedValue('hashed_password');
       mockUsersRepository.create.mockReturnValue(mockUserEntity);
 
-      // Simula erro de banco de dados (ex: race condition)
       const dbError = { code: '23505', message: 'Unique violation' };
       mockUsersRepository.save.mockRejectedValue(dbError);
 
@@ -180,13 +171,11 @@ describe('UsersService', () => {
     });
 
     it('should throw InternalServerErrorException on unexpected database error', async () => {
-      // Simula passar pelas validações
       mockUsersRepository.exists.mockResolvedValue(false);
       mockEnterpriseService.findByUuid.mockResolvedValue(mockEnterprise);
       mockPasswordService.hash.mockResolvedValue('hashed_password');
       mockUsersRepository.create.mockReturnValue(mockUserEntity);
 
-      // Simula erro genérico
       const unexpectedError = new Error('Database went down');
       mockUsersRepository.save.mockRejectedValue(unexpectedError);
 
