@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
-import { AuthService } from './auth.services'; // Ajuste o nome se for auth.service.ts
+import { AuthService } from './auth.services';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
 import { LoginUserDTO } from './DTOs/login-user.dto';
 import { UserResponseDTO } from '../users/DTOs/user-create-response.dto';
