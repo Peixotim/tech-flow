@@ -2,9 +2,12 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { UserRoles } from '../enum/roles.enum';
+import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
 
 @Entity({ name: 'users' })
 export class UsersEntity {
@@ -25,6 +28,9 @@ export class UsersEntity {
   })
   password: string;
 
+  @Column({ type: 'enum', enum: UserRoles, default: UserRoles.CLIENT_VIEWER })
+  role: UserRoles;
+
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
 
@@ -33,4 +39,9 @@ export class UsersEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @ManyToOne(() => EnterpriseEntity, (enterprise) => enterprise.users, {
+    nullable: true,
+  })
+  enterprise: EnterpriseEntity;
 }
