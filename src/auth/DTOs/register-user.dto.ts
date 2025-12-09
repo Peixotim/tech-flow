@@ -1,11 +1,15 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
+  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { UserRoles } from 'src/users/enum/roles.enum';
 
 export class RegisterUserDTO {
   @ApiProperty({
@@ -44,12 +48,21 @@ export class RegisterUserDTO {
   @MaxLength(72, { message: 'Password must be at most 72 characters long.' })
   password: string;
 
-  @ApiProperty({
-    description:
-      'Chave Mestra (Secret Key) para autorizar a criação de novos administradores.',
-    example: 'Tecnicos_SuperSenha_2025!',
+  @ApiPropertyOptional({
+    description: 'Nível de permissão do usuário.',
+    enum: UserRoles,
+    example: UserRoles.CLIENT_VIEWER,
+    default: UserRoles.CLIENT_VIEWER,
   })
-  @IsString({ message: 'SecretKey must be a valid text.' })
-  @IsNotEmpty({ message: 'Registration secret is required.' })
-  secretKey: string;
+  @IsOptional()
+  @IsEnum(UserRoles, { message: 'Invalid role provided.' })
+  role?: UserRoles;
+
+  @ApiProperty({
+    description: 'UUID da empresa à qual este usuário pertence.',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
+  @IsNotEmpty({ message: 'Enterprise ID is required.' })
+  @IsUUID('4', { message: 'Enterprise ID must be a valid UUID.' })
+  enterpriseId: string;
 }
