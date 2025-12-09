@@ -26,9 +26,9 @@ async function bootstrap() {
 
   const dataSource = app.get(DataSource);
   if (dataSource.isInitialized) {
-    logger.log('✅ Database: Connected and Ready to Use!');
+    logger.log('Database: Connected and Ready to Use!');
   } else {
-    logger.error('❌ Critical Error: The Database did not connect!');
+    logger.error('Critical Error: The Database did not connect!');
     process.exit(1);
   }
 
@@ -161,7 +161,7 @@ async function bootstrap() {
   await app.listen(port);
 
   logger.log(
-    `🚀 Tech - Flow API is running on: http://localhost:${port}/api-docs`,
+    `Tech - Flow API is running on: http://localhost:${port}/api-docs`,
   );
 }
 bootstrap();
