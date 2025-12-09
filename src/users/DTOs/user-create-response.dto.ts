@@ -1,36 +1,27 @@
-import {
-  IsDate,
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  MaxLength,
-  MinLength,
-  IsUUID,
-} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserRoles } from '../enum/roles.enum';
 export class UserResponseDTO {
-  @IsUUID('4', { message: 'UUID must be a valid UUID v4.' })
-  @IsNotEmpty({ message: 'UUID is required.' })
+  @ApiProperty({
+    description: 'ID único do usuário',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+  })
   uuid: string;
 
-  @IsString({ message: 'Name must be a valid text.' })
-  @IsNotEmpty({ message: 'Name is required.' })
-  @MinLength(3, { message: 'Name must be at least 3 characters long.' })
-  @MaxLength(80, { message: 'Name must be at most 80 characters long.' })
+  @ApiProperty({ example: 'Pedro de Almeida' })
   name: string;
 
-  @IsEmail({}, { message: 'Email must be a valid email address.' })
-  @IsNotEmpty({ message: 'Email is required.' })
-  @MaxLength(254, { message: 'Email must be at most 254 characters long.' })
+  @ApiProperty({ example: 'pedro@empresa.com' })
   email: string;
 
-  @IsNotEmpty({ message: 'Creation date is required.' })
-  @IsDate({ message: 'Creation date must be a valid Date object.' })
+  @ApiProperty({ example: '2025-12-09T10:00:00.000Z' })
   createdAt: Date;
 
-  constructor(uuid: string, name: string, email: string, createdAt: Date) {
-    this.uuid = uuid;
-    this.name = name;
-    this.email = email;
-    this.createdAt = createdAt;
-  }
+  @ApiPropertyOptional({ enum: UserRoles, example: UserRoles.CLIENT_VIEWER })
+  role?: UserRoles;
+
+  @ApiProperty({
+    description: 'ID da empresa vinculada',
+    example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+  })
+  enterpriseId: string;
 }
