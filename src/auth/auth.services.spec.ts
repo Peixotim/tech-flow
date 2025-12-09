@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.services'; // Ajuste se o nome do arquivo for auth.service.ts
+import { AuthService } from './auth.services';
 import { UsersService } from '../users/users.service';
 import { PasswordService } from '../crypto/password.service';
 import { ConfigService } from '@nestjs/config';
@@ -143,13 +143,11 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if password does not match', async () => {
       mockUsersService.findByMail.mockResolvedValue(mockUserResult);
-      // Simula senha errada (verify retorna false)
       mockPasswordService.verify.mockResolvedValue(false);
 
       await expect(authService.loginUser(loginDto)).rejects.toThrow(
         UnauthorizedException,
       );
-      // Verifica se a ordem dos parâmetros está correta (hash, password)
       expect(mockPasswordService.verify).toHaveBeenCalledWith(
         mockUserResult.password,
         loginDto.password,
@@ -157,46 +155,38 @@ describe('AuthService', () => {
     });
 
     it('should return access_token on successful login (Client User)', async () => {
-      // Arrange
       mockUsersService.findByMail.mockResolvedValue(mockUserResult);
       mockPasswordService.verify.mockResolvedValue(true);
       mockConfigService.get.mockReturnValue('https://api.test.com');
       mockJwtService.signAsync.mockResolvedValue(mockToken);
 
-      // Act
       const result = await authService.loginUser(loginDto);
 
-      // Assert
       expect(result).toEqual({ access_token: mockToken });
 
-      // Verifica se o payload foi montado corretamente para Cliente
       expect(mockJwtService.signAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           sub: mockUserResult.uuid,
           email: mockUserResult.email,
           role: mockUserResult.role,
-          enterprise: mockUserResult.enterprise.uuid, // Deve ter ID
+          enterprise: mockUserResult.enterprise.uuid,
           iss: 'https://api.test.com',
         }),
       );
     });
 
     it('should return access_token with null enterprise for Master User', async () => {
-      // Arrange
       mockUsersService.findByMail.mockResolvedValue(mockUserMaster);
       mockPasswordService.verify.mockResolvedValue(true);
       mockJwtService.signAsync.mockResolvedValue(mockToken);
 
-      // Act
       await authService.loginUser(loginDto);
 
-      // Assert
-      // Verifica se o payload lida bem com enterprise null
       expect(mockJwtService.signAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           sub: mockUserMaster.uuid,
           role: UserRoles.MASTER,
-          enterprise: null, // Deve ser null
+          enterprise: null,
         }),
       );
     });
@@ -204,7 +194,6 @@ describe('AuthService', () => {
     it('should use default ISS/AUD if config service returns null', async () => {
       mockUsersService.findByMail.mockResolvedValue(mockUserResult);
       mockPasswordService.verify.mockResolvedValue(true);
-      // Simula ConfigService não tendo as variáveis
       mockConfigService.get.mockReturnValue(undefined);
       mockJwtService.signAsync.mockResolvedValue(mockToken);
 
@@ -212,15 +201,14 @@ describe('AuthService', () => {
 
       expect(mockJwtService.signAsync).toHaveBeenCalledWith(
         expect.objectContaining({
-          iss: 'https://api.polofaculdades.com.br', // Default do seu código
-          aud: 'https://api.polofaculdades.com.br', // Default do seu código
+          iss: 'https://api.polofaculdades.com.br',
+          aud: 'https://api.polofaculdades.com.br',
         }),
       );
     });
 
     it('should log error and throw InternalServerErrorException on unexpected error', async () => {
       mockUsersService.findByMail.mockResolvedValue(mockUserResult);
-      // Simula erro genérico no verify
       mockPasswordService.verify.mockRejectedValue(new Error('Argon2 failed'));
 
       await expect(authService.loginUser(loginDto)).rejects.toThrow(
