@@ -9,14 +9,44 @@ import {
   SwaggerCustomOptions,
   SwaggerModule,
 } from '@nestjs/swagger';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
   if (process.env.NODE_ENV === 'production') {
     app.useLogger(app.get(PinoLogger));
+    app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            styleSrc: [
+              "'self'",
+              "'unsafe-inline'",
+              'https://fonts.googleapis.com',
+            ],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+            imgSrc: ["'self'", 'data:', 'https:', 'http:'],
+          },
+        },
+        crossOriginResourcePolicy: { policy: 'cross-origin' },
+        referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      }),
+    );
+    app.enableCors({
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true,
+    });
   } else {
     app.useLogger(new NestLogger());
+    app.enableCors({
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+      credentials: true,
+    });
   }
 
   const logger =
