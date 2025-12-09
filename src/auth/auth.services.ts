@@ -6,7 +6,6 @@ import {
   Logger,
   HttpException,
   InternalServerErrorException,
-  ForbiddenException,
 } from '@nestjs/common';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
 import { UsersService } from 'src/users/users.service';
@@ -32,14 +31,6 @@ export class AuthService {
   public async registerUser(
     registerRequest: RegisterUserDTO,
   ): Promise<UserResponseDTO> {
-    const serverSecret = this.configService.get<string>('REGISTRATION_SECRET');
-
-    if (registerRequest.secretKey !== serverSecret) {
-      throw new ForbiddenException(
-        'Access denied: Invalid or missing registration key.',
-      );
-    }
-
     const newUser = await this.usersService.createUser(registerRequest);
     return newUser;
   }
@@ -61,8 +52,8 @@ export class AuthService {
 
     try {
       const matches = await this.passwordService.verify(
-        loginRequest.password,
         user.password,
+        loginRequest.password,
       );
 
       if (!matches) {
@@ -74,8 +65,14 @@ export class AuthService {
       const payload: JwtPayload = {
         sub: user.uuid,
         email: user.email,
-        iss: 'API-CURSO-TECNICO',
-        aud: 'SITES-CURSO-TECNICO',
+        iss:
+          this.configService.get<string>('JWT_ISSUER') ||
+          'https://api.polofaculdades.com.br',
+        aud:
+          this.configService.get<string>('JWT_AUDIENCE') ||
+          'https://api.polofaculdades.com.br',
+        enterprise: user.enterprise?.uuid || null,
+        role: user.role,
         jti: uuidv4(),
       };
 
