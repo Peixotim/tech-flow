@@ -4,6 +4,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from './entity/users.entity';
@@ -11,6 +12,7 @@ import { Repository } from 'typeorm';
 import { UserCreateDTO } from './DTOs/users-create.dto';
 import { PasswordService } from '../crypto/password.service';
 import { UserResponseDTO } from './DTOs/user-create-response.dto';
+import { EnterpriseService } from 'src/enterprise/enterprise.service';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +20,7 @@ export class UsersService {
     @InjectRepository(UsersEntity)
     private readonly usersRepository: Repository<UsersEntity>,
     private readonly passwordService: PasswordService,
+    private readonly enterpriseService: EnterpriseService,
   ) {}
 
   private readonly logger = new Logger(UsersService.name);
@@ -25,13 +28,13 @@ export class UsersService {
   public async createUser(
     requestCreate: UserCreateDTO,
   ): Promise<UserResponseDTO> {
-    const userExists = await this.usersRepository.exists({
-      where: { email: requestCreate.email },
-    });
-
     if (!requestCreate || Object.keys(requestCreate).length === 0) {
       throw new BadRequestException('Error: request payload is empty.');
     }
+
+    const userExists = await this.usersRepository.exists({
+      where: { email: requestCreate.email },
+    });
 
     if (userExists) {
       throw new ConflictException(
@@ -39,6 +42,15 @@ export class UsersService {
       );
     }
 
+    const enterprise = await this.enterpriseService.findByUuid(
+      requestCreate.enterpriseId,
+    );
+
+    if (!enterprise) {
+      throw new NotFoundException(
+        'Error, the company with this uuid does not exist!',
+      );
+    }
     try {
       const passwordHashed = await this.passwordService.hash(
         requestCreate.password,
@@ -48,6 +60,8 @@ export class UsersService {
         name: requestCreate.name,
         email: requestCreate.email,
         password: passwordHashed,
+        role: requestCreate.role,
+        enterprise: enterprise,
       });
 
       const userSaved: UsersEntity =
@@ -58,6 +72,8 @@ export class UsersService {
         name: userSaved.name,
         email: userSaved.email,
         createdAt: userSaved.createdAt,
+        role: userSaved.role,
+        enterpriseId: enterprise.uuid,
       };
 
       return responseUser;
@@ -94,6 +110,20 @@ export class UsersService {
   }
 
   public async findByMail(email: string): Promise<UsersEntity | null> {
-    return await this.usersRepository.findOne({ where: { email } });
+    return await this.usersRepository.findOne({
+      where: { email },
+      relations: ['enterprise'],
+      select: {
+        uuid: true,
+        name: true,
+        email: true,
+        password: true,
+        role: true,
+        isActive: true,
+        enterprise: {
+          uuid: true,
+        },
+      },
+    });
   }
 }
