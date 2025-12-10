@@ -9,7 +9,7 @@ import {
 
 export class LoginUserDTO {
   @ApiProperty({
-    description: 'E-mail cadastrado para acesso ao sistema.',
+    description: 'Registered email for system access.',
     example: 'pedro@admin.com',
     format: 'email',
     maxLength: 254,
@@ -20,7 +20,7 @@ export class LoginUserDTO {
   email: string;
 
   @ApiProperty({
-    description: 'Senha de acesso do usuário.',
+    description: 'User login password.',
     example: 'Pedro@2025',
     minLength: 12,
     maxLength: 72,
