@@ -1,7 +1,7 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.services';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
-import { UserResponseDTO } from 'src/users/DTOs/user-create-response.dto';
+import { UsersResponseDTO } from 'src/users/DTOs/user-create-response.dto';
 import { LoginUserDTO } from './DTOs/login-user.dto';
 
 @Controller('auth')
@@ -11,7 +11,7 @@ export class AuthController {
   @Post('register')
   public async registerUser(
     @Body() requestRegister: RegisterUserDTO,
-  ): Promise<UserResponseDTO> {
+  ): Promise<UsersResponseDTO> {
     return await this.authService.registerUser(requestRegister);
   }
 
