@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.services';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
 import { LoginUserDTO } from './DTOs/login-user.dto';
-import { UserResponseDTO } from '../users/DTOs/user-create-response.dto';
+import { UsersResponseDTO } from '../users/DTOs/user-create-response.dto';
 import { UserRoles } from '../users/enum/roles.enum';
 
 jest.mock('uuid', () => ({
@@ -15,7 +16,7 @@ describe('AuthController', () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let authService: AuthService;
 
-  const mockUserResponse: UserResponseDTO = {
+  const mockUserResponse: UsersResponseDTO = {
     uuid: 'user-uuid-123',
     name: 'Pedro Teste',
     email: 'pedro@test.com',
@@ -67,7 +68,8 @@ describe('AuthController', () => {
       mockAuthService.registerUser.mockResolvedValue(mockUserResponse);
 
       // Act (Ação)
-      const result = await controller.registerUser(registerDto);
+      const result: UsersResponseDTO =
+        await controller.registerUser(registerDto);
 
       expect(result).toEqual(mockUserResponse); // O retorno é igual ao do service?
       expect(mockAuthService.registerUser).toHaveBeenCalledTimes(1); // Foi chamado 1 vez?
