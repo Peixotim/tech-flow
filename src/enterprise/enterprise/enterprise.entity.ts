@@ -1,3 +1,4 @@
+import { LeadsEntity } from 'src/leads/entity/leads.entity';
 import { UsersEntity } from 'src/users/entity/users.entity';
 import {
   Column,
@@ -45,4 +46,7 @@ export class EnterpriseEntity {
 
   @OneToMany(() => UsersEntity, (users) => users.enterprise)
   users: UsersEntity[];
+
+  @OneToMany(() => LeadsEntity, (leads) => leads.enterprise)
+  leads: LeadsEntity[];
 }
