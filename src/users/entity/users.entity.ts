@@ -43,5 +43,5 @@ export class UsersEntity {
   @ManyToOne(() => EnterpriseEntity, (enterprise) => enterprise.users, {
     nullable: true,
   })
-  enterprise: EnterpriseEntity;
+  enterprise?: EnterpriseEntity;
 }
