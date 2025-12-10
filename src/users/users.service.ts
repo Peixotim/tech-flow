@@ -16,6 +16,7 @@ import { EnterpriseService } from 'src/enterprise/enterprise.service';
 import { UsersResponseMasterDTO } from './DTOs/use-master-create-response.dto';
 import { UsersMasterCreateDTO } from './DTOs/users-master-create.dto';
 import { UserRoles } from './enum/roles.enum';
+import { UsersModifyDTO } from './DTOs/users-modify.dto';
 
 @Injectable()
 export class UsersService {
@@ -202,5 +203,77 @@ export class UsersService {
         },
       },
     });
+  }
+
+  public async findByUuid(uuid: string): Promise<UsersEntity | null> {
+    return await this.usersRepository.findOne({
+      where: { uuid },
+      relations: ['enterprise'],
+      select: {
+        uuid: true,
+        name: true,
+        email: true,
+        password: false,
+        role: true,
+        isActive: true,
+        enterprise: {
+          uuid: true,
+        },
+      },
+    });
+  }
+
+  public async getAllUsers(): Promise<UsersEntity[] | null> {
+    const users = await this.usersRepository.find();
+    if (!users) {
+      return null;
+    }
+
+    return users;
+  }
+
+  public async modifyUser(uuid: string, requestModifyUser: UsersModifyDTO) {
+    const user = await this.usersRepository.findOne({
+      where: { uuid },
+    });
+
+    if (!user) {
+      throw new NotFoundException(
+        'Error, could not find a user with this uuid!',
+      );
+    }
+
+    if (requestModifyUser.email && requestModifyUser.email !== user.email) {
+      const emailAlreadyExists = await this.usersRepository.findOne({
+        where: { email: requestModifyUser.email },
+      });
+
+      if (emailAlreadyExists) {
+        throw new ConflictException(
+          'Error: This email is already in use by another user.',
+        );
+      }
+    }
+
+    try {
+      const modifyUser = this.usersRepository.merge(user, requestModifyUser);
+      const saved = await this.usersRepository.save(modifyUser);
+
+      this.logger.log(`User ${saved.uuid} updated successfully.`);
+
+      return saved;
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+
+      this.logger.error(`Error updating user: ${error}`);
+      throw new InternalServerErrorException(
+        'Unexpected error while updating user.',
+      );
+    }
   }
 }
