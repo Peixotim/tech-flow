@@ -10,6 +10,7 @@ import Joi, * as joi from 'joi';
 import { CryptoModule } from 'src/crypto/crypto.module';
 import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
+import { LeadsModule } from 'src/leads/leads.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -65,6 +66,7 @@ import { AuthModule } from 'src/auth/auth.module';
     CryptoModule,
     UsersModule,
     AuthModule,
+    LeadsModule,
   ],
   controllers: [AppController],
   providers: [
