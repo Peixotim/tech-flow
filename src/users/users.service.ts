@@ -11,7 +11,7 @@ import { UsersEntity } from './entity/users.entity';
 import { Repository } from 'typeorm';
 import { UserCreateDTO } from './DTOs/users-create.dto';
 import { PasswordService } from '../crypto/password.service';
-import { UserResponseDTO } from './DTOs/user-create-response.dto';
+import { UsersResponseDTO } from './DTOs/user-create-response.dto';
 import { EnterpriseService } from 'src/enterprise/enterprise.service';
 
 @Injectable()
@@ -27,7 +27,7 @@ export class UsersService {
 
   public async createUser(
     requestCreate: UserCreateDTO,
-  ): Promise<UserResponseDTO> {
+  ): Promise<UsersResponseDTO> {
     if (!requestCreate || Object.keys(requestCreate).length === 0) {
       throw new BadRequestException('Error: request payload is empty.');
     }
@@ -67,7 +67,7 @@ export class UsersService {
       const userSaved: UsersEntity =
         await this.usersRepository.save(userCreate);
 
-      const responseUser: UserResponseDTO = {
+      const responseUser: UsersResponseDTO = {
         uuid: userSaved.uuid,
         name: userSaved.name,
         email: userSaved.email,
