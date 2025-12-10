@@ -13,7 +13,7 @@ import { UserRoles } from 'src/users/enum/roles.enum';
 
 export class RegisterUserDTO {
   @ApiProperty({
-    description: 'Nome completo do usuário',
+    description: 'User full name.',
     example: 'Pedro Peixoto',
     minLength: 3,
     maxLength: 80,
@@ -25,7 +25,7 @@ export class RegisterUserDTO {
   name: string;
 
   @ApiProperty({
-    description: 'Endereço de e-mail corporativo para login e notificações.',
+    description: 'Corporate email address for login and notifications.',
     example: 'pedro@admin.com',
     maxLength: 254,
   })
@@ -36,7 +36,7 @@ export class RegisterUserDTO {
 
   @ApiProperty({
     description:
-      'Senha forte de acesso (Recomendado: letras, números e símbolos).',
+      'Strong access password (Recommended: letters, numbers, and symbols).',
     example: 'PedroForte@2025',
     minLength: 12,
     maxLength: 72,
@@ -49,7 +49,7 @@ export class RegisterUserDTO {
   password: string;
 
   @ApiPropertyOptional({
-    description: 'Nível de permissão do usuário.',
+    description: 'User permission level (Role).',
     enum: UserRoles,
     example: UserRoles.CLIENT_VIEWER,
     default: UserRoles.CLIENT_VIEWER,
@@ -59,7 +59,7 @@ export class RegisterUserDTO {
   role?: UserRoles;
 
   @ApiProperty({
-    description: 'UUID da empresa à qual este usuário pertence.',
+    description: 'UUID of the enterprise to which this user belongs.',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsNotEmpty({ message: 'Enterprise ID is required.' })
