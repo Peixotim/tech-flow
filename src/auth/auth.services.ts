@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
 import { UsersService } from 'src/users/users.service';
-import { UserResponseDTO } from 'src/users/DTOs/user-create-response.dto';
+import { UsersResponseDTO } from 'src/users/DTOs/user-create-response.dto';
 import { LoginUserDTO } from './DTOs/login-user.dto';
 import { PasswordService } from 'src/crypto/password.service';
 import { JwtPayload } from 'src/types/jwt-payload.types';
@@ -30,7 +30,7 @@ export class AuthService {
 
   public async registerUser(
     registerRequest: RegisterUserDTO,
-  ): Promise<UserResponseDTO> {
+  ): Promise<UsersResponseDTO> {
     const newUser = await this.usersService.createUser(registerRequest);
     return newUser;
   }
