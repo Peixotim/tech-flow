@@ -5,7 +5,7 @@ import { UsersResponseDTO } from 'src/users/DTOs/user-create-response.dto';
 import { LoginUserDTO } from './DTOs/login-user.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 
-@ApiTags('Auth') // Cria a seção "Auth" no Swagger
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
