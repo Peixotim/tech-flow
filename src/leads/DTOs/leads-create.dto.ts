@@ -8,9 +8,10 @@ import {
   Matches,
   IsUUID,
 } from 'class-validator';
+
 export class LeadsCreateDTO {
   @ApiProperty({
-    description: 'Nome completo do Lead.',
+    description: 'Lead full name.',
     example: 'Pedro de Almeida Peixoto',
     minLength: 3,
     maxLength: 80,
@@ -22,7 +23,7 @@ export class LeadsCreateDTO {
   name: string;
 
   @ApiPropertyOptional({
-    description: 'E-mail do lead',
+    description: 'Lead email address.',
     example: 'pedro@lead.com',
     format: 'email',
     maxLength: 254,
@@ -33,7 +34,7 @@ export class LeadsCreateDTO {
   email?: string;
 
   @ApiProperty({
-    description: 'Número de celular no padrão internacional (E.164)',
+    description: 'Mobile phone number in international format (E.164).',
     example: '+5511987654321',
     minLength: 8,
     maxLength: 16,
@@ -48,7 +49,7 @@ export class LeadsCreateDTO {
   number: string;
 
   @ApiProperty({
-    description: 'UUID da empresa à qual este lead pertence.',
+    description: 'UUID of the enterprise to which this lead belongs.',
     example: '123e4567-e89b-12d3-a456-426614174000',
   })
   @IsNotEmpty({ message: 'Enterprise ID is required.' })
