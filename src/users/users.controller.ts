@@ -6,6 +6,7 @@ import {
   UseGuards,
   Patch,
   Param,
+  Headers,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
@@ -23,6 +24,8 @@ import {
 } from '@nestjs/swagger';
 import { UsersEntity } from './entity/users.entity';
 import { UsersModifyDTO } from './DTOs/users-modify.dto';
+import { UsersResponseDTO } from './DTOs/user-create-response.dto';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 
 @ApiTags('Users')
 @Controller('users')
@@ -103,5 +106,19 @@ export class UsersController {
     @Body() requestModify: UsersModifyDTO,
   ) {
     return await this.usersService.modifyUser(uuid, requestModify);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current logged-in user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the authenticated user data',
+    type: UsersResponseDTO,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  public async getMe(@CurrentUser() user: { uuid: string; email: string }) {
+    return await this.usersService.getProfile(user.uuid);
   }
 }
