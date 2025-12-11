@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { LoginUserDTO } from './DTOs/login-user.dto';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
-import { UserResponseDTO } from '../users/DTOs/user-create-response.dto';
 import { UserRoles } from '../users/enum/roles.enum';
 
 jest.mock('uuid', () => ({
@@ -99,7 +98,7 @@ describe('AuthService', () => {
         enterpriseId: '123',
       } as any;
 
-      const responseDto: UserResponseDTO = {
+      const responseDto = {
         uuid: '123',
         name: 'Test',
         email: 'test@email.com',
