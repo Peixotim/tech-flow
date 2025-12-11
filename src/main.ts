@@ -13,7 +13,11 @@ import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
-
+  app.enableCors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  });
   if (process.env.NODE_ENV === 'production') {
     app.useLogger(app.get(PinoLogger));
     app.use(
