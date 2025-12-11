@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { EnterpriseService } from './enterprise.service';
 import { EnterpriseCreateDTO } from './DTOs/enterprise-create.dto';
 import { EnterpriseResponseDTO } from './DTOs/enterprise-reponse.dto';
@@ -101,5 +109,35 @@ export class EnterpriseController {
     @Body() requestCreate: EnterpriseCreateAndUserDTO,
   ): Promise<EnterpriseResponseCreateAndUser> {
     return await this.enterpriseService.enterpriseAndUser(requestCreate);
+  }
+
+  @Get('cnpj/:cnpj')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Find Enterprise by CNPJ',
+    description:
+      'Searches for a registered enterprise using its CNPJ document.',
+  })
+  @ApiParam({
+    name: 'cnpj',
+    description: 'CNPJ with or without punctuation',
+    example: '12.345.678/0001-90',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Enterprise found',
+    type: EnterpriseEntity,
+  })
+  @ApiResponse({ status: 404, description: 'Enterprise not found' })
+  public async getCnpj(
+    @Param('cnpj') enterpriseCnpj: string,
+  ): Promise<EnterpriseEntity> {
+    const cleanCnpj = enterpriseCnpj.replace(/\D/g, '');
+    const enterprise = await this.enterpriseService.findByCnpj(cleanCnpj);
+    if (!enterprise) {
+      throw new NotFoundException('Enterprise not found with this CNPJ.');
+    }
+    return enterprise;
   }
 }
