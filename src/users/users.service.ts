@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -18,6 +19,7 @@ import { UsersMasterCreateDTO } from './DTOs/users-master-create.dto';
 import { UserRoles } from './enum/roles.enum';
 import { UsersModifyDTO } from './DTOs/users-modify.dto';
 import { UserCreateAdminDTO } from './DTOs/users-create-admin.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
@@ -26,6 +28,7 @@ export class UsersService {
     private readonly usersRepository: Repository<UsersEntity>,
     private readonly passwordService: PasswordService,
     private readonly enterpriseService: EnterpriseService,
+    private jwtService: JwtService,
   ) {}
 
   private readonly logger = new Logger(UsersService.name);
@@ -346,5 +349,31 @@ export class UsersService {
         'Unexpected error while updating user.',
       );
     }
+  }
+
+  public async getProfile(uuid: string): Promise<UsersResponseDTO> {
+    const user = await this.usersRepository.findOne({
+      where: { uuid },
+      relations: ['enterprise'],
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+    if (!user.enterprise) {
+      throw new ForbiddenException(
+        `Error: You are not registered with any company.`,
+      );
+    }
+    const response: UsersResponseDTO = {
+      uuid: user.uuid,
+      name: user.name,
+      email: user.email,
+      createdAt: user.createdAt,
+      role: user.role,
+      enterpriseCnpj: user.enterprise.cnpj,
+    };
+
+    return response;
   }
 }
