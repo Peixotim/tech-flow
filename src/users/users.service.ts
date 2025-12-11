@@ -33,44 +33,33 @@ export class UsersService {
   public async createUser(
     requestCreate: UserCreateDTO,
   ): Promise<UsersResponseDTO> {
+    console.log(requestCreate);
     if (!requestCreate || Object.keys(requestCreate).length === 0) {
       throw new BadRequestException('Error: request payload is empty.');
     }
 
-    const userExists = await this.usersRepository.exists({
-      where: { email: requestCreate.email },
-    });
-
-    if (userExists) {
-      throw new ConflictException(
-        'Error already has a user registered with this email!',
-      );
-    }
-
-    const enterprise = await this.enterpriseService.findByUuid(
-      requestCreate.enterpriseId,
-    );
+    const cleanCnpj = requestCreate.enterpriseCnpj.replace(/\D/g, '');
+    const enterprise = await this.enterpriseService.findByCnpj(cleanCnpj);
 
     if (!enterprise) {
       throw new NotFoundException(
-        'Error, the company with this uuid does not exist!',
+        `Error: Enterprise with CNPJ ${cleanCnpj} not found!`,
       );
     }
+
     try {
       const passwordHashed = await this.passwordService.hash(
         requestCreate.password,
       );
-
-      const userCreate: UsersEntity = this.usersRepository.create({
+      const userCreate = this.usersRepository.create({
         name: requestCreate.name,
         email: requestCreate.email,
         password: passwordHashed,
-        role: requestCreate.role,
+        role: requestCreate.role || UserRoles.CLIENT_VIEWER,
         enterprise: enterprise,
       });
 
-      const userSaved: UsersEntity =
-        await this.usersRepository.save(userCreate);
+      const userSaved = await this.usersRepository.save(userCreate);
 
       const responseUser: UsersResponseDTO = {
         uuid: userSaved.uuid,
@@ -78,7 +67,7 @@ export class UsersService {
         email: userSaved.email,
         createdAt: userSaved.createdAt,
         role: userSaved.role,
-        enterpriseId: enterprise.uuid,
+        enterpriseCnpj: enterprise.cnpj,
       };
 
       return responseUser;
@@ -93,6 +82,10 @@ export class UsersService {
           ? (error as Record<string, unknown>).code
           : null;
 
+      if (errorCode === '23505') {
+        throw new ConflictException('Error: This email is already registered.');
+      }
+
       this.logger.error({
         message: 'Critical error during user creation process',
         method: 'createUser',
@@ -102,14 +95,8 @@ export class UsersService {
         stack: error instanceof Error ? error.stack : null,
       });
 
-      if (errorCode === '23505') {
-        throw new ConflictException(
-          'Email already registered (concurrency detected).',
-        );
-      }
-
       throw new InternalServerErrorException(
-        'Unexpected error while creating user. Please try again later or contact support.',
+        'Unexpected error while creating user.',
       );
     }
   }
@@ -236,7 +223,7 @@ export class UsersService {
         email: userSaved.email,
         createdAt: userSaved.createdAt,
         role: userSaved.role,
-        enterpriseId: enterprise.uuid,
+        enterpriseCnpj: enterprise.cnpj,
       };
 
       return responseUser;
