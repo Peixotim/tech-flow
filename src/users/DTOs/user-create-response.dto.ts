@@ -20,8 +20,8 @@ export class UsersResponseDTO {
   role?: UserRoles;
 
   @ApiProperty({
-    description: 'ID da empresa vinculada',
-    example: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    description: 'CNPJ da empresa vinculada',
+    example: '40.432.544/0001-47',
   })
-  enterpriseId: string;
+  enterpriseCnpj: string;
 }
