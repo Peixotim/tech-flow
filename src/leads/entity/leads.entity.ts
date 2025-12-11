@@ -1,5 +1,12 @@
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'leads' })
 export class LeadsEntity {
@@ -17,4 +24,10 @@ export class LeadsEntity {
 
   @ManyToOne(() => EnterpriseEntity, (enterprise) => enterprise.leads)
   enterprise: EnterpriseEntity;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
 }

@@ -30,4 +30,10 @@ export class LeadsResponseDTO {
     example: 'e4ead86b-c625-4084-b9a0-321a285feed4',
   })
   enterpriseId: string;
+
+  @ApiProperty({
+    description: 'Date and time the lead was registered.',
+    example: '2025-12-09T14:30:00.000Z',
+  })
+  createdAt: Date;
 }
