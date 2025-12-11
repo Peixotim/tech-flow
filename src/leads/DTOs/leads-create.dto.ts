@@ -29,7 +29,6 @@ export class LeadsCreateDTO {
     maxLength: 254,
   })
   @IsEmail({}, { message: 'Email must be a valid email address.' })
-  @IsNotEmpty({ message: 'Email is required.' })
   @MaxLength(254, { message: 'Email must be at most 254 characters long.' })
   email?: string;
 
