@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -13,7 +12,7 @@ import { UserRoles } from '../enum/roles.enum';
 
 export class UserCreateDTO {
   @ApiProperty({
-    description: 'Nome completo do usuário.',
+    description: 'User full name.',
     example: 'Pedro de Almeida Peixoto',
     minLength: 3,
     maxLength: 80,
@@ -25,8 +24,8 @@ export class UserCreateDTO {
   name: string;
 
   @ApiProperty({
-    description: 'E-mail corporativo único.',
-    example: 'pedro@empresa.com',
+    description: 'Corporate email address.',
+    example: 'pedro@company.com',
     format: 'email',
     maxLength: 254,
   })
@@ -36,8 +35,8 @@ export class UserCreateDTO {
   email: string;
 
   @ApiProperty({
-    description: 'Senha de acesso.',
-    example: 'SenhaForte@123',
+    description: 'Access password.',
+    example: 'StrongPass123!',
     minLength: 12,
     maxLength: 72,
     format: 'password',
@@ -49,7 +48,7 @@ export class UserCreateDTO {
   password: string;
 
   @ApiPropertyOptional({
-    description: 'Nível de permissão do usuário.',
+    description: 'User permission level (Role).',
     enum: UserRoles,
     example: UserRoles.CLIENT_VIEWER,
     default: UserRoles.CLIENT_VIEWER,
@@ -59,10 +58,10 @@ export class UserCreateDTO {
   role?: UserRoles;
 
   @ApiProperty({
-    description: 'UUID da empresa à qual este usuário pertence.',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'CNPJ of the enterprise (digits only or formatted).',
+    example: '12.345.678/0001-90',
   })
-  @IsNotEmpty({ message: 'Enterprise ID is required.' })
-  @IsUUID('4', { message: 'Enterprise ID must be a valid UUID.' })
-  enterpriseId: string;
+  @IsNotEmpty({ message: 'Enterprise CNPJ is required.' })
+  @IsString({ message: 'Cnpj must be a valid text.' })
+  enterpriseCnpj: string;
 }
