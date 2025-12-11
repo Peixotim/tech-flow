@@ -1,7 +1,9 @@
 import {
   BadRequestException,
   ConflictException,
+  forwardRef,
   HttpException,
+  Inject,
   Injectable,
   InternalServerErrorException,
   Logger,
@@ -25,7 +27,10 @@ export class EnterpriseService {
   constructor(
     @InjectRepository(EnterpriseEntity)
     private readonly enterpriseRepository: Repository<EnterpriseEntity>,
+
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+
     private readonly dataSource: DataSource,
     private readonly passwordService: PasswordService,
   ) {}
