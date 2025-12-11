@@ -90,13 +90,13 @@ export class EnterpriseController {
 
   @Post('onboarding')
   @ApiOperation({
-    summary: 'Registra uma nova empresa e seu usuário proprietário',
+    summary: 'Register a new company and its owner user.',
   })
   @ApiResponse({
     status: 201,
-    description: 'Empresa e usuário criados com sucesso.',
+    description: 'Company and user successfully created.',
   })
-  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  @ApiResponse({ status: 400, description: 'Invalid data.' })
   public async onboardNewTenant(
     @Body() requestCreate: EnterpriseCreateAndUserDTO,
   ): Promise<EnterpriseResponseCreateAndUser> {
