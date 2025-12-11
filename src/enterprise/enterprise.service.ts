@@ -42,65 +42,55 @@ export class EnterpriseService {
       throw new BadRequestException('Error: request payload is empty.');
     }
 
-    const existsCnpj = await this.findByCnpj(requestCreate.cnpj);
-    if (existsCnpj) {
-      throw new ConflictException(
-        'Error already has a user registered with this email!',
-      );
-    }
-
-    const existsSlug = await this.findBySlug(requestCreate.slug);
-
-    if (existsSlug) {
-      throw new ConflictException(
-        'Error already has a user registered with this email!',
-      );
-    }
-
     try {
-      const createEnterprise: EnterpriseCreateDTO = {
+      const cleanCnpj = requestCreate.cnpj.replace(/\D/g, '');
+
+      const createEnterprise = this.enterpriseRepository.create({
         ...requestCreate,
-      };
+        cnpj: cleanCnpj,
+      });
 
       const newEnterprise =
         await this.enterpriseRepository.save(createEnterprise);
 
-      const response: EnterpriseResponseDTO = {
-        ...newEnterprise,
-      };
-
-      return response;
+      return newEnterprise;
     } catch (error: unknown) {
       if (error instanceof HttpException) {
         throw error;
       }
+
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown database error';
-
-      const errorStack = error instanceof Error ? error.stack : undefined;
       const dbErrorCode =
         error instanceof Object && 'code' in error
           ? (error as Record<string, unknown>).code
           : null;
 
+      if (dbErrorCode === '23505') {
+        const detail = (error as { detail?: string }).detail || '';
+
+        if (detail.includes('cnpj')) {
+          throw new ConflictException(
+            'Error: An enterprise is already registered with this CNPJ!',
+          );
+        }
+        if (detail.includes('slug')) {
+          throw new ConflictException(
+            'Error: An enterprise is already registered with this Slug!',
+          );
+        }
+
+        throw new ConflictException('Conflict detected: Data already exists.');
+      }
+
       this.logger.error({
         message: 'Failed to create enterprise',
         context: 'createEnterprise',
-        attemptedData: {
-          name: requestCreate.name,
-          cnpj: requestCreate.cnpj,
-          slug: requestCreate.slug,
-        },
+        payload: { slug: requestCreate.slug },
         error: errorMessage,
         code: dbErrorCode,
-        stack: errorStack,
       });
 
-      if (dbErrorCode === '23505') {
-        throw new ConflictException(
-          'Conflict detected: CNPJ or Slug already exists (Race condition).',
-        );
-      }
       throw new InternalServerErrorException(
         'Unexpected error while registering the enterprise. Please contact support.',
       );
@@ -108,49 +98,44 @@ export class EnterpriseService {
   }
 
   public async findByUuid(uuid: string): Promise<EnterpriseEntity | null> {
-    const enterprise = await this.enterpriseRepository.findOne({
-      where: { uuid },
-    });
-
-    if (!enterprise) {
-      return null;
-    }
-
-    return enterprise;
+    return await this.enterpriseRepository.findOne({ where: { uuid } });
   }
 
   public async findByCnpj(cnpj: string): Promise<EnterpriseEntity | null> {
+    const cleanCnpj = cnpj.replace(/\D/g, '').trim();
+
+    this.logger.debug(
+      `🔍 Buscando Empresa | Input Original: '${cnpj}' | Limpo: '${cleanCnpj}'`,
+    );
+
     const enterprise = await this.enterpriseRepository.findOne({
-      where: { cnpj },
+      where: { cnpj: cleanCnpj },
     });
 
-    if (!enterprise) {
-      return null;
+    if (enterprise) {
+      this.logger.log(
+        `✅ Empresa encontrada: ${enterprise.name} (UUID: ${enterprise.uuid})`,
+      );
+    } else {
+      this.logger.warn(
+        `❌ Nenhuma empresa encontrada para o CNPJ: '${cleanCnpj}'`,
+      );
+      const all = await this.enterpriseRepository.find({ select: ['cnpj'] });
+      this.logger.debug(
+        `📋 CNPJs disponíveis no banco: ${all.map((e) => `'${e.cnpj}'`).join(', ')}`,
+      );
     }
+
     return enterprise;
   }
 
   public async findBySlug(slug: string): Promise<EnterpriseEntity | null> {
-    const enterprise = await this.enterpriseRepository.findOne({
-      where: { slug },
-    });
-
-    if (!enterprise) {
-      return null;
-    }
-    return enterprise;
+    return await this.enterpriseRepository.findOne({ where: { slug } });
   }
 
-  public async getAll(): Promise<EnterpriseEntity[] | null> {
-    const enterprise: EnterpriseEntity[] | null =
-      await this.enterpriseRepository.find();
-
-    if (!enterprise) {
-      return null;
-      this.logger.log(`Error, there is no company registered`);
-    }
-
-    return enterprise;
+  public async getAll(): Promise<EnterpriseEntity[]> {
+    const enterprises = await this.enterpriseRepository.find();
+    return enterprises || [];
   }
 
   public async enterpriseAndUser(
@@ -184,10 +169,12 @@ export class EnterpriseService {
     await queryRunner.startTransaction();
 
     try {
+      const cleanCnpj = requestCreate.cnpj.replace(/\D/g, '');
+
       const newEnterprise = queryRunner.manager.create(EnterpriseEntity, {
         name: requestCreate.name,
         slug: requestCreate.slug,
-        cnpj: requestCreate.cnpj,
+        cnpj: cleanCnpj,
         primaryColor: requestCreate.primaryColor,
         isActive: requestCreate.isActive,
         logoUrl: requestCreate.logoUrl,
@@ -198,6 +185,7 @@ export class EnterpriseService {
       const passwordHash = await this.passwordService.hash(
         requestCreate.password,
       );
+
       const newUser = queryRunner.manager.create(UsersEntity, {
         email: requestCreate.email,
         name: requestCreate.fullerName,
@@ -231,19 +219,18 @@ export class EnterpriseService {
 
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
-      const errorStack = error instanceof Error ? error.stack : undefined;
-
-      this.logger.error(
-        `Transaction failed for onboarding: ${errorMessage}`,
-        errorStack,
-      );
 
       if (error instanceof HttpException) {
         throw error;
       }
 
+      this.logger.error(
+        `Transaction failed for onboarding: ${errorMessage}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
       throw new InternalServerErrorException(
-        'Unexpected error during enterprise and user creation. Transaction rolled back.',
+        'Unexpected error during onboarding transaction.',
       );
     } finally {
       await queryRunner.release();
