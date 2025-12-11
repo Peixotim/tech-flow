@@ -15,6 +15,8 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { EnterpriseEntity } from './enterprise/enterprise.entity';
+import { EnterpriseCreateAndUserDTO } from './DTOs/enterprise-user-create.dto';
+import { EnterpriseResponseCreateAndUser } from './DTOs/enterprise-user-response.dto';
 
 @ApiTags('Enterprises')
 @Controller('enterprises')
@@ -84,5 +86,20 @@ export class EnterpriseController {
     @Param('uuid') uuid: string,
   ): Promise<EnterpriseEntity | null> {
     return await this.enterpriseService.findByUuid(uuid);
+  }
+
+  @Post('onboarding')
+  @ApiOperation({
+    summary: 'Registra uma nova empresa e seu usuário proprietário',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Empresa e usuário criados com sucesso.',
+  })
+  @ApiResponse({ status: 400, description: 'Dados inválidos.' })
+  public async onboardNewTenant(
+    @Body() requestCreate: EnterpriseCreateAndUserDTO,
+  ): Promise<EnterpriseResponseCreateAndUser> {
+    return await this.enterpriseService.enterpriseAndUser(requestCreate);
   }
 }
