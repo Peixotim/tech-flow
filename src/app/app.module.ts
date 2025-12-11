@@ -45,7 +45,7 @@ import { LeadsModule } from 'src/leads/leads.module';
         //Resumindo para cada 60 segundos uma pessoa pode fazer 100 requisicoes, se passar de 100 toma um block de 30 segundos
         ttl: 60000, //Janela de 1 minuto
         limit: 100, //100 requisicoes permitidas dentro de 1 minuto (1.6 por segundo)
-        blockDuration: 30000, //Caso de 30 segundos caso abusem das requisicoes!
+        blockDuration: 420000, //Caso de 30 segundos caso abusem das requisicoes!
       },
     ]),
     TypeOrmModule.forRootAsync({
