@@ -115,6 +115,7 @@ export class EnterpriseService {
     }
     return enterprise;
   }
+
   public async findBySlug(slug: string): Promise<EnterpriseEntity | null> {
     const enterprise = await this.enterpriseRepository.findOne({
       where: { slug },
@@ -123,6 +124,18 @@ export class EnterpriseService {
     if (!enterprise) {
       return null;
     }
+    return enterprise;
+  }
+
+  public async getAll(): Promise<EnterpriseEntity[] | null> {
+    const enterprise: EnterpriseEntity[] | null =
+      await this.enterpriseRepository.find();
+
+    if (!enterprise) {
+      return null;
+      this.logger.log(`Error, there is no company registered`);
+    }
+
     return enterprise;
   }
 }
