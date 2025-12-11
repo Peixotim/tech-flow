@@ -5,7 +5,6 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
   MaxLength,
   MinLength,
 } from 'class-validator';
@@ -59,10 +58,9 @@ export class RegisterUserDTO {
   role?: UserRoles;
 
   @ApiProperty({
-    description: 'UUID of the enterprise to which this user belongs.',
-    example: '123e4567-e89b-12d3-a456-426614174000',
+    description: 'CNPJ of the enterprise to which this user belongs.',
+    example: '60.409.075/0001-52',
   })
-  @IsNotEmpty({ message: 'Enterprise ID is required.' })
-  @IsUUID('4', { message: 'Enterprise ID must be a valid UUID.' })
-  enterpriseId: string;
+  @IsNotEmpty({ message: 'Enterprise CNPJ is required.' })
+  enterpriseCnpj: string;
 }
