@@ -43,7 +43,7 @@ describe('UsersService', () => {
     name: 'João Developer',
     email: 'joao@techflow.com',
     password: 'password123',
-    enterpriseId: 'enterprise-uuid',
+    enterpriseCnpj: 'enterprise-cnpj',
     role: UserRoles.CLIENT_ADMIN,
   };
 
