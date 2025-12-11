@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { EnterpriseService } from './enterprise.service';
 import { EnterpriseController } from './enterprise.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -9,7 +9,7 @@ import { CryptoModule } from 'src/crypto/crypto.module';
 @Module({
   imports: [
     TypeOrmModule.forFeature([EnterpriseEntity]),
-    UsersModule,
+    forwardRef(() => UsersModule),
     CryptoModule,
   ],
   controllers: [EnterpriseController],
