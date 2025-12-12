@@ -28,6 +28,8 @@ export class EnrollmentsService {
     const enrollment = this.enrollmentRepo.create({
       ...createDto,
       enterpriseId,
+      enrollmentDate: new Date(),
+      lead: lead,
     });
 
     await this.enrollmentRepo.save(enrollment);
