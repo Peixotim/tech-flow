@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.services';
@@ -22,7 +21,7 @@ describe('AuthController', () => {
     email: 'pedro@test.com',
     createdAt: new Date(),
     role: UserRoles.CLIENT_ADMIN,
-    enterpriseId: 'enterprise-uuid',
+    enterpriseCnpj: 'enterprise-uuid',
   };
 
   const mockTokenResponse = {
@@ -61,7 +60,7 @@ describe('AuthController', () => {
         name: 'Pedro Teste',
         email: 'pedro@test.com',
         password: 'Password123!',
-        enterpriseId: 'enterprise-uuid',
+        enterpriseCnpj: 'enterprise-uuid',
       } as RegisterUserDTO; // Cast para evitar erro se faltar campos opcionais no mock
 
       // Ensinamos o Mock a retornar sucesso
