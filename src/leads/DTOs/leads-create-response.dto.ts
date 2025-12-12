@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { LeadStatus } from '../enums/lead-status.enum';
 
 export class LeadsResponseDTO {
   @ApiProperty({
@@ -36,4 +37,10 @@ export class LeadsResponseDTO {
     example: '2025-12-09T14:30:00.000Z',
   })
   createdAt: Date;
+
+  @ApiProperty({
+    description: 'Lead status',
+    example: 'LeadStatus.NOW',
+  })
+  status: LeadStatus;
 }
