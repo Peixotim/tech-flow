@@ -17,12 +17,7 @@ import { EnrollmentsService } from './enrollment.service';
 import { CreateEnrollmentDTO } from './DTOs/enrollment-create.dto';
 import { JwtAuthGuard } from 'src/auth/strategies/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
-
-interface UserWithEnterprise {
-  enterprise: {
-    uuid: string;
-  };
-}
+import type { UserWithEnterprise } from './interfaces/enrollment.interfaces';
 
 @ApiTags('Enrollments')
 @Controller('enrollments')
