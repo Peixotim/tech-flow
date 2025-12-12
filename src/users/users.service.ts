@@ -376,4 +376,13 @@ export class UsersService {
 
     return response;
   }
+
+  public async findByIdWithEnterprise(
+    uuid: string,
+  ): Promise<UsersEntity | null> {
+    return await this.usersRepository.findOne({
+      where: { uuid },
+      relations: ['enterprise'],
+    });
+  }
 }
