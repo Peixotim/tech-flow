@@ -9,5 +9,6 @@ import { EnterpriseModule } from 'src/enterprise/enterprise.module';
   controllers: [LeadsController],
   providers: [LeadsService],
   imports: [TypeOrmModule.forFeature([LeadsEntity]), EnterpriseModule],
+  exports: [LeadsService],
 })
 export class LeadsModule {}
