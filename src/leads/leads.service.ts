@@ -15,6 +15,7 @@ import { EnterpriseService } from 'src/enterprise/enterprise.service';
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'src/types/jwt-payload.types';
+import { LeadStatus } from './enums/lead-status.enum';
 
 @Injectable()
 export class LeadsService {
@@ -141,5 +142,24 @@ export class LeadsService {
       this.logger.error(`Error decoding token: ${error}`);
       throw new UnauthorizedException('Failed to process token');
     }
+  }
+
+  public async findOneByEnterprise(
+    uuid: string,
+    enterpriseId: string,
+  ): Promise<LeadsEntity> {
+    const lead = await this.leadsRepository.findOne({
+      where: { uuid, enterprise: { uuid: enterpriseId } },
+    });
+
+    if (!lead) {
+      throw new NotFoundException('Lead não encontrado ou acesso negado.');
+    }
+
+    return lead;
+  }
+
+  public async markAsWon(uuid: string) {
+    await this.leadsRepository.update(uuid, { status: LeadStatus.WON });
   }
 }
