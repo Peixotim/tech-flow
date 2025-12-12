@@ -11,6 +11,8 @@ import { CryptoModule } from 'src/crypto/crypto.module';
 import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { LeadsModule } from 'src/leads/leads.module';
+import { EnrollmentModule } from 'src/enrollment/enrollment.module';
+import { CampaingsModule } from 'src/campaings/campaing.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -67,6 +69,8 @@ import { LeadsModule } from 'src/leads/leads.module';
     UsersModule,
     AuthModule,
     LeadsModule,
+    EnrollmentModule,
+    CampaingsModule,
   ],
   controllers: [AppController],
   providers: [
