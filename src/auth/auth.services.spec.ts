@@ -10,8 +10,8 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { LoginUserDTO } from './DTOs/login-user.dto';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
+import { LoginUserDTO } from './DTOs/login-user.dto';
 import { UserRoles } from '../users/enum/roles.enum';
 
 jest.mock('uuid', () => ({
