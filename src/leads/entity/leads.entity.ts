@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { LeadStatus } from '../enums/lead-status.enum';
 
 @Entity({ name: 'leads' })
 export class LeadsEntity {
@@ -21,6 +22,13 @@ export class LeadsEntity {
 
   @Column({ type: 'varchar', length: 18 })
   number: string;
+
+  @Column({
+    type: 'enum',
+    enum: LeadStatus,
+    default: LeadStatus.NEW,
+  })
+  status: LeadStatus;
 
   @ManyToOne(() => EnterpriseEntity, (enterprise) => enterprise.leads)
   enterprise: EnterpriseEntity;
