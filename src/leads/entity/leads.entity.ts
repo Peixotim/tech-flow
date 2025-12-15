@@ -4,10 +4,12 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { LeadStatus } from '../enums/lead-status.enum';
+import { LeadHistoryEntity } from './lead-history.entity';
 
 @Entity({ name: 'leads' })
 export class LeadsEntity {
@@ -38,4 +40,7 @@ export class LeadsEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => LeadHistoryEntity, (history) => history.lead)
+  history: LeadHistoryEntity[];
 }
