@@ -2,8 +2,11 @@ import {
   Body,
   Controller,
   Get,
-  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { LeadsEntity } from './entity/leads.entity';
@@ -20,7 +23,11 @@ import {
   ApiResponse,
   ApiTags,
   ApiBody,
+  ApiQuery,
 } from '@nestjs/swagger';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import type { UserPayload } from 'src/auth/types/user-payload.type';
+import { UpdateLeadDTO } from './DTOs/leads-update.dto';
 
 @ApiTags('Leads')
 @Controller('leads')
@@ -60,14 +67,63 @@ export class LeadsController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "List leads for the logged-in user's enterprise" })
+  @ApiOperation({
+    summary: "List leads for the logged-in user's enterprise with pagination",
+  })
   @ApiResponse({
     status: 200,
-    description: 'List of enterprise leads',
-    type: [LeadsEntity],
+    description: 'Paginated list of enterprise leads',
   })
-  @ApiResponse({ status: 401, description: 'Invalid token or not provided' })
-  public async getLeads(@Headers('authorization') accessToken: string) {
-    return await this.leadsService.getLeadsEnterpriseToken(accessToken);
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Page number (default 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Items per page (default 10)',
+  })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    type: String,
+    description: 'Search by name or number',
+  })
+  public async getLeads(
+    @CurrentUser() user: UserPayload,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('search') search?: string,
+  ) {
+    return await this.leadsService.findAllWithFilters(user.enterprise.uuid, {
+      page,
+      limit,
+      search,
+    });
+  }
+
+  @Patch(':uuid')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a lead status or info' })
+  @ApiResponse({
+    status: 200,
+    description: 'Lead updated successfully',
+    type: LeadsResponseDTO,
+  })
+  @ApiResponse({ status: 404, description: 'Lead not found' })
+  public async updateLead(
+    @Param('uuid', ParseUUIDPipe) uuid: string,
+    @Body() updateData: UpdateLeadDTO,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return await this.leadsService.update(
+      uuid,
+      user.enterprise.uuid,
+      updateData,
+    );
   }
 }
