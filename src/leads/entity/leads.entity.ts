@@ -26,7 +26,7 @@ export class LeadsEntity {
   @Column({
     type: 'enum',
     enum: LeadStatus,
-    default: LeadStatus.NEW,
+    default: LeadStatus.NOVO,
   })
   status: LeadStatus;
 
