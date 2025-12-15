@@ -9,13 +9,14 @@ import {
 import { LeadsResponseDTO } from './DTOs/leads-create-response.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LeadsEntity } from './entity/leads.entity';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, Repository } from 'typeorm';
 import { LeadsCreateDTO } from './DTOs/leads-create.dto';
 import { EnterpriseService } from 'src/enterprise/enterprise.service';
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
 import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'src/types/jwt-payload.types';
 import { LeadStatus } from './enums/lead-status.enum';
+import { UpdateLeadDTO } from './DTOs/leads-update.dto';
 
 @Injectable()
 export class LeadsService {
@@ -160,6 +161,62 @@ export class LeadsService {
   }
 
   public async markAsWon(uuid: string) {
-    await this.leadsRepository.update(uuid, { status: LeadStatus.WON });
+    await this.leadsRepository.update(uuid, { status: LeadStatus.GANHO });
+  }
+
+  public async findAllWithFilters(
+    enterpriseId: string,
+    query: {
+      page?: number;
+      limit?: number;
+      search?: string;
+    },
+  ) {
+    const page = Number(query.page) || 1;
+    const limit = Number(query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    let whereCondition:
+      | FindOptionsWhere<LeadsEntity>
+      | FindOptionsWhere<LeadsEntity>[];
+
+    const baseFilter = { enterprise: { uuid: enterpriseId } };
+
+    if (query.search) {
+      whereCondition = [
+        { ...baseFilter, name: ILike(`%${query.search}%`) },
+        { ...baseFilter, number: ILike(`%${query.search}%`) },
+      ];
+    } else {
+      whereCondition = baseFilter;
+    }
+
+    const [data, total] = await this.leadsRepository.findAndCount({
+      where: whereCondition,
+      take: limit,
+      skip: skip,
+      order: { createdAt: 'DESC' },
+      relations: ['enterprise'],
+    });
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+  public async update(
+    uuid: string,
+    entepriseId: string,
+    updateData: UpdateLeadDTO,
+  ): Promise<LeadsEntity> {
+    const lead = await this.findOneByEnterprise(uuid, entepriseId);
+    this.leadsRepository.merge(lead, updateData);
+
+    return await this.leadsRepository.save(lead);
   }
 }
