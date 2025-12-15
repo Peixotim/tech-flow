@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository } from 'typeorm';
 import { EnrollmentEntity } from './entity/enrollment.entity';
 import { CreateEnrollmentDTO } from './DTOs/enrollment-create.dto';
 import { LeadsService } from 'src/leads/leads.service';
@@ -40,8 +40,14 @@ export class EnrollmentsService {
   }
 
   public async getMetrics(enterpriseId: string) {
-    const today = new Date();
+    const now = new Date();
+
+    const today = new Date(now);
     today.setHours(0, 0, 0, 0);
+
+    const oneWeekAgo = new Date(now);
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    oneWeekAgo.setHours(0, 0, 0, 0);
 
     const revenueResult = ((await this.enrollmentRepo
       .createQueryBuilder('enrollment')
@@ -49,15 +55,23 @@ export class EnrollmentsService {
       .where('enrollment.enterpriseId = :id', { id: enterpriseId })
       .getRawOne()) as { total: number | null }) ?? { total: null };
 
-    const enrollmentsToday = await this.enrollmentRepo
-      .createQueryBuilder('enrollment')
-      .where('enrollment.enterpriseId = :id', { id: enterpriseId })
-      .andWhere('enrollment.createdAt >= :today', { today })
-      .getCount();
+    const enrollmentsToday = await this.enrollmentRepo.count({
+      where: {
+        enterpriseId,
+        createdAt: MoreThanOrEqual(today),
+      },
+    });
 
+    const enrollmentsWeek = await this.enrollmentRepo.count({
+      where: {
+        enterpriseId,
+        createdAt: MoreThanOrEqual(oneWeekAgo),
+      },
+    });
     return {
       totalRevenue: Number(revenueResult.total) || 0,
       enrollmentsToday,
+      enrollmentsWeek,
     };
   }
 }
