@@ -1,7 +1,7 @@
 export enum LeadStatus {
-  NEW = 'NEW',
-  CONTACTED = 'CONTACTED',
-  SCHEDULED = 'SCHEDULED',
-  WON = 'WON',
-  LOST = 'LOST',
+  NOVO = 'NOVO',
+  EM_ATENDIMENTO = 'EM_ATENDIMENTO',
+  AGENDADO = 'AGENDADO',
+  GANHO = 'GANHO',
+  PERDIDO = 'PERDIDO',
 }
