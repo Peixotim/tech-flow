@@ -17,12 +17,16 @@ import { JwtService } from '@nestjs/jwt';
 import { JwtPayload } from 'src/types/jwt-payload.types';
 import { LeadStatus } from './enums/lead-status.enum';
 import { UpdateLeadDTO } from './DTOs/leads-update.dto';
+import { LeadHistoryEntity } from './entity/lead-history.entity';
+import { HistoryType } from './enums/lead-history.enum';
 
 @Injectable()
 export class LeadsService {
   constructor(
     @InjectRepository(LeadsEntity)
     private readonly leadsRepository: Repository<LeadsEntity>,
+    @InjectRepository(LeadHistoryEntity)
+    private readonly leadsHistoryRepository: Repository<LeadHistoryEntity>,
     private readonly enterpriseService: EnterpriseService,
     private jwtService: JwtService,
   ) {}
@@ -59,6 +63,11 @@ export class LeadsService {
         enterpriseId: newLead.enterprise.uuid,
       };
 
+      await this.leadsHistoryRepository.save({
+        lead: newLead,
+        type: HistoryType.CREATION,
+        description: 'Lead criado no sistema via API/Formulário.',
+      });
       return response;
     } catch (error: unknown) {
       const payload: LeadsCreateDTO = {
@@ -217,6 +226,25 @@ export class LeadsService {
     const lead = await this.findOneByEnterprise(uuid, entepriseId);
     this.leadsRepository.merge(lead, updateData);
 
+    const oldStatus = lead.status;
+
+    if (updateData.status && updateData.status !== oldStatus) {
+      await this.leadsHistoryRepository.save({
+        lead,
+        type: HistoryType.STATUS_CHANGE,
+        description: `Status alterado de ${lead.status} para ${updateData.status}`,
+      });
+    }
+
     return await this.leadsRepository.save(lead);
+  }
+
+  public async getHistory(leadUuid: string) {
+    return this.leadsHistoryRepository.find({
+      where: {
+        lead: { uuid: leadUuid },
+      },
+      order: { createdAt: 'DESC' },
+    });
   }
 }
