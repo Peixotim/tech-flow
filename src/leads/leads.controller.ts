@@ -126,4 +126,9 @@ export class LeadsController {
       updateData,
     );
   }
+
+  @Get(':id/history')
+  public async getHistory(@Param('id') id: string) {
+    return await this.leadsService.getHistory(id);
+  }
 }
