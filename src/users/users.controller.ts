@@ -7,10 +7,11 @@ import {
   Patch,
   Param,
   Headers,
+  Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { RolesGuard } from 'src/auth/guards/roles.guards';
-import { UsersResponseMasterDTO } from './DTOs/use-master-create-response.dto';
+import { UsersResponseMasterDTO } from './DTOs/users-master-create-response.dto';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { UserRoles } from './enum/roles.enum';
 import { UsersMasterCreateDTO } from './DTOs/users-master-create.dto';
@@ -24,8 +25,9 @@ import {
 } from '@nestjs/swagger';
 import { UsersEntity } from './entity/users.entity';
 import { UsersModifyDTO } from './DTOs/users-modify.dto';
-import { UsersResponseDTO } from './DTOs/user-create-response.dto';
+import { UsersResponseDTO } from './DTOs/users-create-response.dto';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { UserCreateViewerDTO } from './DTOs/users-create-viewer.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -120,5 +122,94 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   public async getMe(@CurrentUser() user: { uuid: string; email: string }) {
     return await this.usersService.getProfile(user.uuid);
+  }
+
+  @Post('viewer')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a new Employee (Viewer) for the current Enterprise',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Employee created successfully',
+    type: UsersResponseDTO,
+  })
+  public async createViewer(
+    @Body() requestCreate: UserCreateViewerDTO,
+    @CurrentUser() user: { uuid: string; enterprise: { uuid: string } },
+  ) {
+    return await this.usersService.createViewer(
+      requestCreate,
+      user.enterprise.uuid,
+    );
+  }
+
+  @Get('team')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'List all users belonging to the current user enterprise',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of team members',
+    type: [UsersEntity],
+  })
+  public async getTeam(@CurrentUser() user: { enterprise: { uuid: string } }) {
+    return await this.usersService.getUsersByEnterprise(user.enterprise.uuid);
+  }
+
+  @Patch(':uuid/inactive')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Deactivate a user from the enterprise (Soft Delete equivalent)',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID of the user to deactivate',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User successfully deactivated.',
+    type: UsersEntity,
+  })
+  @ApiResponse({ status: 404, description: 'User or Enterprise not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized access.' })
+  public async deactivateUser(
+    @Param('uuid') userUuid: string,
+    @CurrentUser() user: { enterprise: { uuid: string } },
+  ) {
+    return await this.usersService.inactive(user.enterprise.uuid, userUuid);
+  }
+
+  @Delete(':uuid')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Permanently delete a user from the enterprise',
+  })
+  @ApiParam({
+    name: 'uuid',
+    description: 'UUID of the user to delete',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'User successfully deleted.',
+  })
+  @ApiResponse({ status: 404, description: 'User or Enterprise not found.' })
+  public async deleteUser(
+    @Param('uuid') userUuid: string,
+    @CurrentUser() user: { enterprise: { uuid: string } },
+  ) {
+    return await this.usersService.deleteEnterpriseId(
+      user.enterprise.uuid,
+      userUuid,
+    );
   }
 }
