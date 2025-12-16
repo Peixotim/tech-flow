@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { RegisterUserDTO } from './DTOs/register-user.dto';
 import { UsersService } from 'src/users/users.service';
-import { UsersResponseDTO } from 'src/users/DTOs/user-create-response.dto';
+import { UsersResponseDTO } from 'src/users/DTOs/users-create-response.dto';
 import { LoginUserDTO } from './DTOs/login-user.dto';
 import { PasswordService } from 'src/crypto/password.service';
 import { JwtPayload } from 'src/types/jwt-payload.types';
