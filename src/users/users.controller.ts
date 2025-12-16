@@ -6,7 +6,6 @@ import {
   UseGuards,
   Patch,
   Param,
-  Headers,
   Delete,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -167,7 +166,7 @@ export class UsersController {
   @Roles(UserRoles.CLIENT_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Deactivate a user from the enterprise (Soft Delete equivalent)',
+    summary: 'Deactivate (or toggle) a user status',
   })
   @ApiParam({
     name: 'uuid',
@@ -175,16 +174,19 @@ export class UsersController {
   })
   @ApiResponse({
     status: 200,
-    description: 'User successfully deactivated.',
-    type: UsersEntity,
+    description: 'User status successfully toggled.',
   })
-  @ApiResponse({ status: 404, description: 'User or Enterprise not found.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized access.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
   public async deactivateUser(
     @Param('uuid') userUuid: string,
-    @CurrentUser() user: { enterprise: { uuid: string } },
+    @CurrentUser()
+    user: { uuid: string; enterprise: { uuid: string } },
   ) {
-    return await this.usersService.inactive(user.enterprise.uuid, userUuid);
+    return await this.usersService.inactive(
+      user.enterprise.uuid,
+      userUuid,
+      user.uuid,
+    );
   }
 
   @Delete(':uuid')
@@ -192,7 +194,7 @@ export class UsersController {
   @Roles(UserRoles.CLIENT_ADMIN)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'Permanently delete a user from the enterprise',
+    summary: 'Permanently delete a user',
   })
   @ApiParam({
     name: 'uuid',
@@ -202,14 +204,16 @@ export class UsersController {
     status: 200,
     description: 'User successfully deleted.',
   })
-  @ApiResponse({ status: 404, description: 'User or Enterprise not found.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
   public async deleteUser(
     @Param('uuid') userUuid: string,
-    @CurrentUser() user: { enterprise: { uuid: string } },
+    @CurrentUser()
+    user: { uuid: string; enterprise: { uuid: string } },
   ) {
     return await this.usersService.deleteEnterpriseId(
       user.enterprise.uuid,
       userUuid,
+      user.uuid,
     );
   }
 }
