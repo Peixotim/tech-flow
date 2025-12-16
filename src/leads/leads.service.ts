@@ -10,7 +10,7 @@ import {
 import { LeadsResponseDTO } from './DTOs/leads-create-response.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LeadsEntity } from './entity/leads.entity';
-import { FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { FindOptionsWhere, ILike, IsNull, Repository } from 'typeorm';
 import { LeadsCreateDTO } from './DTOs/leads-create.dto';
 import { EnterpriseService } from 'src/enterprise/enterprise.service';
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
@@ -180,6 +180,7 @@ export class LeadsService {
       page?: number;
       limit?: number;
       search?: string;
+      sdrId?: string;
     },
   ) {
     const page = Number(query.page) || 1;
@@ -190,8 +191,15 @@ export class LeadsService {
       | FindOptionsWhere<LeadsEntity>
       | FindOptionsWhere<LeadsEntity>[];
 
-    const baseFilter = { enterprise: { uuid: enterpriseId } };
+    const baseFilter: FindOptionsWhere<LeadsEntity> = {
+      enterprise: { uuid: enterpriseId },
+    };
 
+    if (query.sdrId === 'null') {
+      baseFilter.sdr = IsNull();
+    } else {
+      baseFilter.sdr = { uuid: query.sdrId };
+    }
     if (query.search) {
       whereCondition = [
         { ...baseFilter, name: ILike(`%${query.search}%`) },
@@ -206,7 +214,7 @@ export class LeadsService {
       take: limit,
       skip: skip,
       order: { createdAt: 'DESC' },
-      relations: ['enterprise'],
+      relations: ['enterprise', 'sdr'],
     });
 
     return {
