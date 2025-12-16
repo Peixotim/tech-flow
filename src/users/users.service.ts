@@ -6,7 +6,6 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from './entity/users.entity';
@@ -449,49 +448,72 @@ export class UsersService {
     return users;
   }
 
-  public async deleteEnterpriseId(enterpriseId: string, userUuid: string) {
+  public async deleteEnterpriseId(
+    enterpriseId: string,
+    userUuid: string,
+    requesterId?: string,
+  ) {
+    if (requesterId && userUuid === requesterId) {
+      throw new BadRequestException('You cannot delete your own account.');
+    }
+
     const user = await this.findByUuid(userUuid);
 
     if (!user) {
-      throw new NotFoundException('Error: No one could be registered.');
+      throw new NotFoundException('User not found.');
     }
 
-    const enterprise = await this.enterpriseService.findByUuid(enterpriseId);
-
-    if (!enterprise) {
-      throw new NotFoundException('Error: This company could not be found.');
+    if (user.role === UserRoles.CLIENT_ADMIN) {
+      throw new ForbiddenException('Cannot delete an Administrator account.');
     }
 
-    if (!user.enterprise || user.enterprise.uuid !== enterprise.uuid) {
-      throw new UnauthorizedException(
-        "Error: The company is not the same as the user's.",
+    if (!user.enterprise || user.enterprise.uuid !== enterpriseId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this user (Different Enterprise).',
       );
     }
 
     await this.usersRepository.remove(user);
+    return { message: 'User deleted successfully' };
   }
 
-  public async inactive(enterpriseId: string, userUuid: string) {
+  public async inactive(
+    enterpriseId: string,
+    userUuid: string,
+    requesterId?: string,
+  ) {
+    if (requesterId && userUuid === requesterId) {
+      throw new BadRequestException('You cannot deactivate your own account.');
+    }
+
     const user = await this.findByUuid(userUuid);
 
     if (!user) {
-      throw new NotFoundException('Error: No one could be registered.');
+      throw new NotFoundException('User not found.');
     }
 
-    const enterprise = await this.enterpriseService.findByUuid(enterpriseId);
-
-    if (!enterprise) {
-      throw new NotFoundException('Error: This company could not be found.');
-    }
-
-    if (!user.enterprise || user.enterprise.uuid !== enterprise.uuid) {
-      throw new UnauthorizedException(
-        "Error: The company is not the same as the user's.",
+    if (user.role === UserRoles.CLIENT_ADMIN) {
+      throw new ForbiddenException(
+        'Cannot deactivate an Administrator account.',
       );
     }
 
-    user.isActive = false;
+    if (!user.enterprise || user.enterprise.uuid !== enterpriseId) {
+      throw new ForbiddenException(
+        'You do not have permission to modify this user.',
+      );
+    }
+
+    user.isActive = !user.isActive;
+
     const saved = await this.usersRepository.save(user);
-    return saved;
+
+    return {
+      uuid: saved.uuid,
+      isActive: saved.isActive,
+      message: saved.isActive
+        ? 'User activated successfully'
+        : 'User deactivated successfully',
+    };
   }
 }
