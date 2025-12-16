@@ -504,16 +504,52 @@ export class UsersService {
       );
     }
 
-    user.isActive = !user.isActive;
+    user.isActive = false;
 
     const saved = await this.usersRepository.save(user);
 
     return {
       uuid: saved.uuid,
       isActive: saved.isActive,
-      message: saved.isActive
-        ? 'User activated successfully'
-        : 'User deactivated successfully',
+      message: 'User deactivated successfully',
+    };
+  }
+
+  public async activate(
+    enterpriseId: string,
+    userUuid: string,
+    requesterId?: string,
+  ) {
+    if (requesterId && userUuid === requesterId) {
+      throw new BadRequestException('You cannot reactivate your own account.');
+    }
+
+    const user = await this.findByUuid(userUuid);
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    if (user.role === UserRoles.CLIENT_ADMIN) {
+      throw new ForbiddenException(
+        'Cannot reactivate an Administrator account.',
+      );
+    }
+
+    if (!user.enterprise || user.enterprise.uuid !== enterpriseId) {
+      throw new ForbiddenException(
+        'You do not have permission to modify this user.',
+      );
+    }
+
+    user.isActive = true;
+
+    const saved = await this.usersRepository.save(user);
+
+    return {
+      uuid: saved.uuid,
+      isActive: saved.isActive,
+      message: 'User activated successfully',
     };
   }
 }
