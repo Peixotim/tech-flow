@@ -216,4 +216,22 @@ export class UsersController {
       user.uuid,
     );
   }
+
+  @Patch(':uuid/activate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reactivate a user account' })
+  @ApiParam({ name: 'uuid', description: 'UUID of the user to reactivate' })
+  @ApiResponse({ status: 200, description: 'User successfully activated.' })
+  public async activateUser(
+    @Param('uuid') userUuid: string,
+    @CurrentUser() user: { uuid: string; enterprise: { uuid: string } },
+  ) {
+    return await this.usersService.activate(
+      user.enterprise.uuid,
+      userUuid,
+      user.uuid,
+    );
+  }
 }
