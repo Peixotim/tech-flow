@@ -224,15 +224,15 @@ export class LeadsService {
     updateData: UpdateLeadDTO,
   ): Promise<LeadsEntity> {
     const lead = await this.findOneByEnterprise(uuid, entepriseId);
-    this.leadsRepository.merge(lead, updateData);
-
     const oldStatus = lead.status;
+
+    this.leadsRepository.merge(lead, updateData);
 
     if (updateData.status && updateData.status !== oldStatus) {
       await this.leadsHistoryRepository.save({
         lead,
         type: HistoryType.STATUS_CHANGE,
-        description: `Status alterado de ${lead.status} para ${updateData.status}`,
+        description: `Status alterado de ${oldStatus} para ${updateData.status}`,
       });
     }
 
