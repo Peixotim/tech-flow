@@ -6,20 +6,22 @@ import {
   InternalServerErrorException,
   Logger,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UsersEntity } from './entity/users.entity';
 import { Repository } from 'typeorm';
 import { UserCreateDTO } from './DTOs/users-create.dto';
 import { PasswordService } from '../crypto/password.service';
-import { UsersResponseDTO } from './DTOs/user-create-response.dto';
+import { UsersResponseDTO } from './DTOs/users-create-response.dto';
 import { EnterpriseService } from 'src/enterprise/enterprise.service';
-import { UsersResponseMasterDTO } from './DTOs/use-master-create-response.dto';
+import { UsersResponseMasterDTO } from './DTOs/users-master-create-response.dto';
 import { UsersMasterCreateDTO } from './DTOs/users-master-create.dto';
 import { UserRoles } from './enum/roles.enum';
 import { UsersModifyDTO } from './DTOs/users-modify.dto';
 import { UserCreateAdminDTO } from './DTOs/users-create-admin.dto';
 import { JwtService } from '@nestjs/jwt';
+import { UserCreateViewerDTO } from './DTOs/users-create-viewer.dto';
 
 @Injectable()
 export class UsersService {
@@ -384,5 +386,112 @@ export class UsersService {
       where: { uuid },
       relations: ['enterprise'],
     });
+  }
+
+  public async createViewer(
+    requestCreate: UserCreateViewerDTO,
+    managerEnterpriseId: string,
+  ) {
+    const userExists = await this.usersRepository.exists({
+      where: { email: requestCreate.email },
+    });
+
+    if (userExists) {
+      throw new ConflictException('Error: This email is already in use!');
+    }
+
+    const enterprise =
+      await this.enterpriseService.findByUuid(managerEnterpriseId);
+
+    if (!enterprise) {
+      throw new NotFoundException('Manager enterprise not found.');
+    }
+    try {
+      const passwordHashed = await this.passwordService.hash(
+        requestCreate.password,
+      );
+
+      const createUser = this.usersRepository.create({
+        name: requestCreate.name,
+        email: requestCreate.email,
+        password: passwordHashed,
+        role: UserRoles.CLIENT_VIEWER,
+        enterprise: enterprise,
+      });
+
+      const saved = await this.usersRepository.save(createUser);
+      return {
+        uuid: saved.uuid,
+        name: saved.name,
+        email: saved.email,
+        createdAt: saved.createdAt,
+        role: saved.role,
+        enterpriseCnpj: saved.enterprise?.cnpj,
+      };
+    } catch (error) {
+      this.logger.error(`Error creating viewer: ${error}`);
+      throw new InternalServerErrorException('Error creating employee user.');
+    }
+  }
+
+  public async getUsersByEnterprise(
+    enterpriseId: string,
+  ): Promise<UsersEntity[]> {
+    const users = await this.usersRepository.find({
+      where: { enterprise: { uuid: enterpriseId } },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!users) {
+      return [];
+    }
+
+    return users;
+  }
+
+  public async deleteEnterpriseId(enterpriseId: string, userUuid: string) {
+    const user = await this.findByUuid(userUuid);
+
+    if (!user) {
+      throw new NotFoundException('Error: No one could be registered.');
+    }
+
+    const enterprise = await this.enterpriseService.findByUuid(enterpriseId);
+
+    if (!enterprise) {
+      throw new NotFoundException('Error: This company could not be found.');
+    }
+
+    if (!user.enterprise || user.enterprise.uuid !== enterprise.uuid) {
+      throw new UnauthorizedException(
+        "Error: The company is not the same as the user's.",
+      );
+    }
+
+    await this.usersRepository.remove(user);
+  }
+
+  public async inactive(enterpriseId: string, userUuid: string) {
+    const user = await this.findByUuid(userUuid);
+
+    if (!user) {
+      throw new NotFoundException('Error: No one could be registered.');
+    }
+
+    const enterprise = await this.enterpriseService.findByUuid(enterpriseId);
+
+    if (!enterprise) {
+      throw new NotFoundException('Error: This company could not be found.');
+    }
+
+    if (!user.enterprise || user.enterprise.uuid !== enterprise.uuid) {
+      throw new UnauthorizedException(
+        "Error: The company is not the same as the user's.",
+      );
+    }
+
+    user.isActive = false;
+    const saved = await this.usersRepository.save(user);
+    return saved;
   }
 }
