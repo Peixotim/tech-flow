@@ -133,4 +133,20 @@ export class LeadsController {
   public async getHistory(@Param('id') id: string) {
     return await this.leadsService.getHistory(id);
   }
+
+  @Patch(':uuid/assign')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN, UserRoles.MASTER)
+  @ApiOperation({ summary: 'Assign a lead to an employee (SDR)' })
+  public async assignLead(
+    @Param('uuid', ParseUUIDPipe) uuid: string,
+    @Body('sdrId', ParseUUIDPipe) sdrId: string, // Recebe o ID do funcionário no body
+    @CurrentUser() user: UserPayload,
+  ) {
+    return await this.leadsService.assignLead(
+      uuid,
+      sdrId,
+      user.enterprise.uuid,
+    );
+  }
 }
