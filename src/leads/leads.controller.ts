@@ -69,40 +69,28 @@ export class LeadsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: "List leads for the logged-in user's enterprise with pagination",
+    summary: 'List leads with filters (pagination, search, sdr)',
   })
-  @ApiResponse({
-    status: 200,
-    description: 'Paginated list of enterprise leads',
-  })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
   @ApiQuery({
-    name: 'page',
+    name: 'sdrId',
     required: false,
-    type: Number,
-    description: 'Page number (default 1)',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Items per page (default 10)',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-    description: 'Search by name or number',
+    description: "Pass 'null' to filter unassigned leads",
   })
   public async getLeads(
     @CurrentUser() user: UserPayload,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('search') search?: string,
+    @Query('sdrId') sdrId?: string,
   ) {
     return await this.leadsService.findAllWithFilters(user.enterprise.uuid, {
       page,
       limit,
       search,
+      sdrId,
     });
   }
 
