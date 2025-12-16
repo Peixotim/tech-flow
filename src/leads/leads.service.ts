@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
   BadGatewayException,
   Injectable,
@@ -246,5 +247,22 @@ export class LeadsService {
       },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  public async assignLead(
+    leadUuid: string,
+    sdrUuid: string,
+    enterpriseId: string,
+  ) {
+    const lead = await this.findOneByEnterprise(leadUuid, enterpriseId);
+
+    lead.sdr = { uuid: sdrUuid } as any;
+
+    await this.leadsHistoryRepository.save({
+      lead,
+      type: HistoryType.STATUS_CHANGE,
+      description: `Lead atribuído ao SDR ID: ${sdrUuid}`,
+    });
+    return this.leadsRepository.save(lead);
   }
 }
