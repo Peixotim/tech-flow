@@ -28,6 +28,7 @@ import {
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { UserPayload } from 'src/auth/types/user-payload.type';
 import { UpdateLeadDTO } from './DTOs/leads-update.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Leads')
 @Controller('leads')
@@ -128,6 +129,7 @@ export class LeadsController {
   }
 
   @Get(':id/history')
+  @Throttle({ default: { limit: 500, ttl: 60000 } })
   public async getHistory(@Param('id') id: string) {
     return await this.leadsService.getHistory(id);
   }
