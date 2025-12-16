@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { LeadStatus } from '../enums/lead-status.enum';
 import { LeadHistoryEntity } from './lead-history.entity';
+import { UsersEntity } from 'src/users/entity/users.entity';
 
 @Entity({ name: 'leads' })
 export class LeadsEntity {
@@ -43,4 +44,7 @@ export class LeadsEntity {
 
   @OneToMany(() => LeadHistoryEntity, (history) => history.lead)
   history: LeadHistoryEntity[];
+
+  @ManyToOne(() => UsersEntity, { nullable: true })
+  sdr: UsersEntity;
 }
