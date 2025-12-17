@@ -38,6 +38,7 @@ describe('UsersService', () => {
     primaryColor: '#000000',
     leads: [],
     enrollments: [],
+    monthlyGoal: 100,
   };
 
   const mockUserCreateDTO: UserCreateDTO = {
