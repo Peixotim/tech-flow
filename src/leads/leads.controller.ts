@@ -29,6 +29,7 @@ import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import type { UserPayload } from 'src/auth/types/user-payload.type';
 import { UpdateLeadDTO } from './DTOs/leads-update.dto';
 import { Throttle } from '@nestjs/throttler';
+import { LeadsNewManagerDTO } from './DTOs/leads-new-manager.dto';
 
 @ApiTags('Leads')
 @Controller('leads')
@@ -136,5 +137,31 @@ export class LeadsController {
       sdrId,
       user.enterprise.uuid,
     );
+  }
+
+  @Post('new')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN, UserRoles.CLIENT_VIEWER, UserRoles.MASTER)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create a new lead manually (Manager Dashboard)',
+    description:
+      'Endpoint used by the Manager frontend to insert leads manually.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Lead created successfully.',
+    type: LeadsResponseDTO,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error (invalid email, phone pattern, etc).',
+  })
+  @ApiBody({ type: LeadsNewManagerDTO })
+  public async newLead(
+    @Body() lead: LeadsNewManagerDTO,
+    @CurrentUser() user: UserPayload,
+  ) {
+    return await this.leadsService.newLead(lead, user.enterprise.uuid);
   }
 }
