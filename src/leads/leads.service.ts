@@ -172,6 +172,18 @@ export class LeadsService {
   }
 
   public async markAsWon(uuid: string) {
+    const lead = await this.leadsRepository.findOne({
+      where: { uuid: uuid },
+    });
+    if (!lead) {
+      throw new NotFoundException('Lead not found!');
+    }
+
+    await this.leadsHistoryRepository.save({
+      lead,
+      type: HistoryType.SALE,
+      description: `Venda concluida 🎉!`,
+    });
     await this.leadsRepository.update(uuid, { status: LeadStatus.GANHO });
   }
 
