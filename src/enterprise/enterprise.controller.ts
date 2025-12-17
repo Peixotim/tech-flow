@@ -4,6 +4,7 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -25,6 +26,8 @@ import {
 import { EnterpriseEntity } from './enterprise/enterprise.entity';
 import { EnterpriseCreateAndUserDTO } from './DTOs/enterprise-user-create.dto';
 import { EnterpriseResponseCreateAndUser } from './DTOs/enterprise-user-response.dto';
+import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
+import { UpdateGoalDTO } from './DTOs/enterprise-update-goal.dto';
 
 @ApiTags('Enterprises')
 @Controller('enterprises')
@@ -56,6 +59,25 @@ export class EnterpriseController {
     @Body() requestCreate: EnterpriseCreateDTO,
   ): Promise<EnterpriseResponseDTO> {
     return await this.enterpriseService.createEnterprise(requestCreate);
+  }
+
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @Roles(UserRoles.CLIENT_ADMIN, UserRoles.MASTER, UserRoles.CLIENT_VIEWER)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get details of the current logged-in enterprise',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the enterprise details including monthly goal.',
+    type: EnterpriseEntity,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  public async getMyEnterprise(
+    @CurrentUser() user: { enterprise: { uuid: string } },
+  ) {
+    return await this.enterpriseService.findByUuid(user.enterprise.uuid);
   }
 
   @Get()
@@ -139,5 +161,27 @@ export class EnterpriseController {
       throw new NotFoundException('Enterprise not found with this CNPJ.');
     }
     return enterprise;
+  }
+
+  @Patch('goal')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.CLIENT_ADMIN, UserRoles.MASTER)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Update the monthly revenue goal',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Goal updated successfully.',
+    type: EnterpriseEntity,
+  })
+  public async updateGoal(
+    @Body() updateData: UpdateGoalDTO,
+    @CurrentUser() user: { enterprise: { uuid: string } },
+  ) {
+    return await this.enterpriseService.updateGoal(
+      user.enterprise.uuid,
+      updateData.goal,
+    );
   }
 }
