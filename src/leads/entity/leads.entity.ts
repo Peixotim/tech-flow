@@ -56,4 +56,10 @@ export class LeadsEntity {
 
   @Column({ type: 'varchar', nullable: true, default: 'api' })
   origin?: LeadOrigin;
+
+  @Column({ type: 'timestamp', nullable: true })
+  scheduledAt?: Date;
+
+  @Column({ type: 'varchar', nullable: true })
+  scheduleNotes?: string;
 }
