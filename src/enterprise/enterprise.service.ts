@@ -7,6 +7,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { EnterpriseEntity } from './enterprise/enterprise.entity';
@@ -235,5 +236,18 @@ export class EnterpriseService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  public async updateGoal(enterpriseId: string, newGoal: number) {
+    const enterprise = await this.findByUuid(enterpriseId);
+
+    if (!enterprise) {
+      throw new NotFoundException(`Error enterprise not found !`);
+    }
+
+    enterprise.monthlyGoal = newGoal;
+
+    const saved = await this.enterpriseRepository.save(enterprise);
+    return saved;
   }
 }
