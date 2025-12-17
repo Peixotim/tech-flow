@@ -30,6 +30,7 @@ import type { UserPayload } from 'src/auth/types/user-payload.type';
 import { UpdateLeadDTO } from './DTOs/leads-update.dto';
 import { Throttle } from '@nestjs/throttler';
 import { LeadsNewManagerDTO } from './DTOs/leads-new-manager.dto';
+import { LeadStatus } from './enums/lead-status.enum';
 
 @ApiTags('Leads')
 @Controller('leads')
@@ -70,7 +71,8 @@ export class LeadsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
-    summary: 'List leads with filters (pagination, search, sdr)',
+    summary:
+      'List leads with filters (pagination, search, sdr, status, date range)',
   })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -80,18 +82,35 @@ export class LeadsController {
     required: false,
     description: "Pass 'null' to filter unassigned leads",
   })
+  @ApiQuery({ name: 'status', required: false, enum: LeadStatus })
+  @ApiQuery({
+    name: 'startDate',
+    required: false,
+    description: 'ISO Date string',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: false,
+    description: 'ISO Date string',
+  })
   public async getLeads(
     @CurrentUser() user: UserPayload,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('search') search?: string,
     @Query('sdrId') sdrId?: string,
+    @Query('status') status?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     return await this.leadsService.findAllWithFilters(user.enterprise.uuid, {
       page,
       limit,
       search,
       sdrId,
+      status,
+      startDate,
+      endDate,
     });
   }
 
