@@ -20,6 +20,7 @@ import { LeadStatus } from './enums/lead-status.enum';
 import { UpdateLeadDTO } from './DTOs/leads-update.dto';
 import { LeadHistoryEntity } from './entity/lead-history.entity';
 import { HistoryType } from './enums/lead-history.enum';
+import { LeadsNewManagerDTO } from './DTOs/leads-new-manager.dto';
 
 @Injectable()
 export class LeadsService {
@@ -214,7 +215,7 @@ export class LeadsService {
       take: limit,
       skip: skip,
       order: { createdAt: 'DESC' },
-      relations: ['enterprise', 'sdr'],
+      relations: ['enterprise', 'sdr', 'enrollment'],
     });
 
     return {
@@ -272,5 +273,28 @@ export class LeadsService {
       description: `Lead atribuído ao SDR ID: ${sdrUuid}`,
     });
     return this.leadsRepository.save(lead);
+  }
+
+  public async newLead(lead: LeadsNewManagerDTO, enterpriseId: string) {
+    const enterprise = await this.enterpriseService.findByUuid(enterpriseId);
+
+    if (!enterprise) {
+      throw new NotFoundException(`Error enterprise not found`);
+    }
+
+    const createLead = this.leadsRepository.create({
+      ...lead,
+      enterprise: enterprise,
+    });
+
+    const savedLead = await this.leadsRepository.save(createLead);
+
+    await this.leadsHistoryRepository.save({
+      lead: savedLead,
+      type: HistoryType.CREATION,
+      description: `Lead cadastrado manualmente pelo Gestor. Origem: ${lead.origin.toUpperCase()}`,
+    });
+
+    return savedLead;
   }
 }
