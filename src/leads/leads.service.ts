@@ -240,17 +240,38 @@ export class LeadsService {
       },
     };
   }
+
   public async update(
     uuid: string,
-    entepriseId: string,
+    enterpriseId: string,
     updateData: UpdateLeadDTO,
   ): Promise<LeadsEntity> {
-    const lead = await this.findOneByEnterprise(uuid, entepriseId);
+    const lead = await this.findOneByEnterprise(uuid, enterpriseId);
+
     const oldStatus = lead.status;
 
     this.leadsRepository.merge(lead, updateData);
 
-    if (updateData.status && updateData.status !== oldStatus) {
+    if (updateData.status === LeadStatus.AGENDADO && updateData.scheduledAt) {
+      const dateFormatted = new Date(updateData.scheduledAt).toLocaleString(
+        'pt-BR',
+        {
+          day: '2-digit',
+          month: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        },
+      );
+      const notes = updateData.scheduleNotes
+        ? ` | Obs: ${updateData.scheduleNotes}`
+        : '';
+
+      await this.leadsHistoryRepository.save({
+        lead,
+        type: HistoryType.STATUS_CHANGE,
+        description: `Agendamento marcado para ${dateFormatted}${notes}`,
+      });
+    } else if (updateData.status && updateData.status !== oldStatus) {
       await this.leadsHistoryRepository.save({
         lead,
         type: HistoryType.STATUS_CHANGE,
