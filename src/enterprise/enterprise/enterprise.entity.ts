@@ -53,4 +53,13 @@ export class EnterpriseEntity {
 
   @OneToMany(() => EnrollmentEntity, (enrollment) => enrollment.enterprise)
   enrollments: EnrollmentEntity[];
+
+  @Column({
+    name: 'monthly_goal',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 10000.0,
+  })
+  monthlyGoal: number;
 }
