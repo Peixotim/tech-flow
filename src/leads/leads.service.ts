@@ -10,7 +10,7 @@ import {
 import { LeadsResponseDTO } from './DTOs/leads-create-response.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LeadsEntity } from './entity/leads.entity';
-import { FindOptionsWhere, ILike, IsNull, Repository } from 'typeorm';
+import { Between, FindOptionsWhere, ILike, IsNull, Repository } from 'typeorm';
 import { LeadsCreateDTO } from './DTOs/leads-create.dto';
 import { EnterpriseService } from 'src/enterprise/enterprise.service';
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
@@ -194,29 +194,49 @@ export class LeadsService {
       limit?: number;
       search?: string;
       sdrId?: string;
+      status?: string;
+      startDate?: string;
+      endDate?: string;
     },
   ) {
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    let whereCondition:
-      | FindOptionsWhere<LeadsEntity>
-      | FindOptionsWhere<LeadsEntity>[];
-
     const baseFilter: FindOptionsWhere<LeadsEntity> = {
       enterprise: { uuid: enterpriseId },
     };
 
-    if (query.sdrId === 'null') {
-      baseFilter.sdr = IsNull();
-    } else {
-      baseFilter.sdr = { uuid: query.sdrId };
+    // Filtro por SDR
+    if (query.sdrId) {
+      if (query.sdrId === 'null') {
+        baseFilter.sdr = IsNull();
+      } else {
+        baseFilter.sdr = { uuid: query.sdrId };
+      }
     }
+
+    if (query.status) {
+      baseFilter.status = query.status as LeadStatus;
+    }
+
+    if (query.startDate && query.endDate) {
+      baseFilter.scheduledAt = Between(
+        new Date(query.startDate),
+        new Date(query.endDate),
+      );
+    }
+
+    // Lógica de Busca (Search)
+    let whereCondition:
+      | FindOptionsWhere<LeadsEntity>
+      | FindOptionsWhere<LeadsEntity>[];
+
     if (query.search) {
       whereCondition = [
         { ...baseFilter, name: ILike(`%${query.search}%`) },
         { ...baseFilter, number: ILike(`%${query.search}%`) },
+        { ...baseFilter, email: ILike(`%${query.search}%`) },
       ];
     } else {
       whereCondition = baseFilter;
@@ -226,7 +246,8 @@ export class LeadsService {
       where: whereCondition,
       take: limit,
       skip: skip,
-      order: { createdAt: 'DESC' },
+      // Se estiver filtrando por data de agendamento, ordena por ela. Senão, por criação.
+      order: query.startDate ? { scheduledAt: 'ASC' } : { createdAt: 'DESC' },
       relations: ['enterprise', 'sdr', 'enrollment'],
     });
 
