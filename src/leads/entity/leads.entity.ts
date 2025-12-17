@@ -5,12 +5,15 @@ import {
   Entity,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { LeadStatus } from '../enums/lead-status.enum';
 import { LeadHistoryEntity } from './lead-history.entity';
 import { UsersEntity } from 'src/users/entity/users.entity';
+import { EnrollmentEntity } from 'src/enrollment/entity/enrollment.entity';
+import { LeadOrigin } from '../enums/lead-origin.enum';
 
 @Entity({ name: 'leads' })
 export class LeadsEntity {
@@ -47,4 +50,10 @@ export class LeadsEntity {
 
   @ManyToOne(() => UsersEntity, { nullable: true })
   sdr: UsersEntity;
+
+  @OneToOne(() => EnrollmentEntity, (enrollment) => enrollment.lead)
+  enrollment: EnrollmentEntity;
+
+  @Column({ type: 'varchar', nullable: true, default: 'api' })
+  origin?: LeadOrigin;
 }
