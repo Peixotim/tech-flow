@@ -48,7 +48,7 @@ export class LeadsEntity {
   @OneToMany(() => LeadHistoryEntity, (history) => history.lead)
   history: LeadHistoryEntity[];
 
-  @ManyToOne(() => UsersEntity, { nullable: true })
+  @ManyToOne(() => UsersEntity, { nullable: true, onDelete: 'SET NULL' })
   sdr: UsersEntity;
 
   @OneToOne(() => EnrollmentEntity, (enrollment) => enrollment.lead)
