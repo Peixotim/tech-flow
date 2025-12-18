@@ -59,6 +59,17 @@ describe('UsersService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     enterprise: mockEnterprise,
+    avatarConfig: {
+      clothing: '',
+      hairColor: '',
+      hairStyle: '',
+      skinColor: '',
+      accessory: '',
+      background: '',
+    },
+    level: 0,
+    experiencePoints: 0,
+    unlockedItems: [],
   };
   const mockUsersRepository = {
     exists: jest.fn(),
