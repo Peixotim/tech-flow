@@ -21,6 +21,9 @@ import { UsersModifyDTO } from './DTOs/users-modify.dto';
 import { UserCreateAdminDTO } from './DTOs/users-create-admin.dto';
 import { JwtService } from '@nestjs/jwt';
 import { UserCreateViewerDTO } from './DTOs/users-create-viewer.dto';
+import { UpdateAvatarDTO } from './DTOs/users-avatar.dto';
+import { AvatarConfig } from './types/users-avatar-config.types';
+import { ChangePasswordDTO } from './DTOs/users-change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -373,6 +376,10 @@ export class UsersService {
       createdAt: user.createdAt,
       role: user.role,
       enterpriseCnpj: user.enterprise.cnpj,
+      avatarConfig: user.avatarConfig,
+      level: user.level,
+      experiencePoints: user.experiencePoints,
+      unlockedItems: user.unlockedItems,
     };
 
     return response;
@@ -551,5 +558,77 @@ export class UsersService {
       isActive: saved.isActive,
       message: 'User activated successfully',
     };
+  }
+
+  public async updateAvatar(uuid: string, avatarConfig: UpdateAvatarDTO) {
+    const user = await this.findByUuid(uuid);
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const currentConfig: Partial<AvatarConfig> = user.avatarConfig ?? {};
+
+    user.avatarConfig = {
+      ...currentConfig,
+      characterId: avatarConfig.characterId,
+      background: avatarConfig.background,
+      aura: avatarConfig.aura || 'none',
+    } as AvatarConfig;
+
+    return await this.usersRepository.save(user);
+  }
+
+  public async updateStats(
+    uuid: string,
+    experiencePoints: number,
+    level: number,
+  ) {
+    return await this.usersRepository.update(uuid, {
+      experiencePoints,
+      level,
+    });
+  }
+
+  public async addUnlockedItems(uuid: string, newItems: string[]) {
+    const user = await this.findByUuid(uuid);
+    if (!user) return;
+
+    const currentItems = user.unlockedItems || [];
+    const updatedItems = [...new Set([...currentItems, ...newItems])];
+
+    return await this.usersRepository.update(uuid, {
+      unlockedItems: updatedItems,
+    });
+  }
+
+  public async changePassword(uuid: string, dto: ChangePasswordDTO) {
+    const user = await this.usersRepository
+      .createQueryBuilder('users')
+      .addSelect('users.password')
+      .where('users.uuid = :uuid', { uuid })
+      .getOne();
+
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const isPasswordValid = await this.passwordService.verify(
+      user.password,
+      dto.oldPassword,
+    );
+
+    if (!isPasswordValid) {
+      throw new ForbiddenException('A senha atual está incorreta.');
+    }
+
+    const newPasswordHash = await this.passwordService.hash(dto.newPassword);
+
+    user.password = newPasswordHash;
+    await this.usersRepository.update(uuid, {
+      password: newPasswordHash,
+    });
+
+    return { message: 'Senha alterada com sucesso!' };
   }
 }
