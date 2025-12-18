@@ -20,6 +20,7 @@ import { EnterpriseResponseCreateAndUser } from './DTOs/enterprise-user-response
 import { PasswordService } from 'src/crypto/password.service';
 import { UserRoles } from 'src/users/enum/roles.enum';
 import { UsersEntity } from 'src/users/entity/users.entity';
+import { PlaybookService } from 'src/playbook/playbook.service';
 
 @Injectable()
 export class EnterpriseService {
@@ -33,6 +34,10 @@ export class EnterpriseService {
     private readonly usersService: UsersService,
 
     private readonly dataSource: DataSource,
+
+    @Inject(forwardRef(() => PlaybookService))
+    private readonly playbookService: PlaybookService,
+
     private readonly passwordService: PasswordService,
   ) {}
 
@@ -169,6 +174,9 @@ export class EnterpriseService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
+    let savedEnterprise: EnterpriseEntity;
+    let savedUser: UsersEntity;
+
     try {
       const cleanCnpj = requestCreate.cnpj.replace(/\D/g, '');
 
@@ -181,7 +189,7 @@ export class EnterpriseService {
         logoUrl: requestCreate.logoUrl,
       });
 
-      const savedEnterprise = await queryRunner.manager.save(newEnterprise);
+      savedEnterprise = await queryRunner.manager.save(newEnterprise);
 
       const passwordHash = await this.passwordService.hash(
         requestCreate.password,
@@ -195,26 +203,9 @@ export class EnterpriseService {
         enterprise: savedEnterprise,
       });
 
-      const savedUser = await queryRunner.manager.save(newUser);
+      savedUser = await queryRunner.manager.save(newUser);
 
       await queryRunner.commitTransaction();
-
-      const response: EnterpriseResponseCreateAndUser = {
-        userUuid: savedUser.uuid,
-        userName: savedUser.name,
-        email: savedUser.email,
-        createdAt: savedUser.createdAt,
-
-        enterpriseUuid: savedEnterprise.uuid,
-        enterpriseName: savedEnterprise.name,
-        slug: savedEnterprise.slug,
-        cnpj: savedEnterprise.cnpj,
-        logoUrl: savedEnterprise.logoUrl,
-        primaryColor: savedEnterprise.primaryColor,
-        isActive: savedEnterprise.isActive,
-      };
-
-      return response;
     } catch (error) {
       await queryRunner.rollbackTransaction();
 
@@ -236,6 +227,32 @@ export class EnterpriseService {
     } finally {
       await queryRunner.release();
     }
+
+    if (savedEnterprise && savedUser) {
+      this.playbookService
+        .generateDefaultContent(savedEnterprise, savedUser)
+        .catch((err) => {
+          const errorMessage =
+            err instanceof Error ? err.message : 'Unknown error';
+          this.logger.error(
+            `Failed to generate default playbook for Enterprise ${savedEnterprise.uuid}: ${errorMessage}`,
+          );
+        });
+    }
+    const response: EnterpriseResponseCreateAndUser = {
+      userUuid: savedUser.uuid,
+      userName: savedUser.name,
+      email: savedUser.email,
+      createdAt: savedUser.createdAt,
+      enterpriseUuid: savedEnterprise.uuid,
+      enterpriseName: savedEnterprise.name,
+      slug: savedEnterprise.slug,
+      cnpj: savedEnterprise.cnpj,
+      logoUrl: savedEnterprise.logoUrl,
+      primaryColor: savedEnterprise.primaryColor,
+      isActive: savedEnterprise.isActive,
+    };
+    return response;
   }
 
   public async updateGoal(enterpriseId: string, newGoal: number) {
