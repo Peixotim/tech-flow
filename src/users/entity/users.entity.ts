@@ -10,6 +10,7 @@ import {
 import { UserRoles } from '../enum/roles.enum';
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
 import { TasksEntity } from 'src/tasks/entity/tasks.entity';
+import type { AvatarConfig } from '../types/users-avatar-config.types';
 
 @Entity({ name: 'users' })
 export class UsersEntity {
@@ -35,6 +36,18 @@ export class UsersEntity {
 
   @Column({ type: 'boolean', default: true })
   isActive: boolean;
+
+  @Column({ type: 'simple-json', nullable: true })
+  avatarConfig?: AvatarConfig;
+
+  @Column({ type: 'int', default: 1 })
+  level?: number;
+
+  @Column({ type: 'int', default: 0 })
+  experiencePoints?: number;
+
+  @Column('text', { array: true, default: [] })
+  unlockedItems?: string[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
