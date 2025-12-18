@@ -13,6 +13,7 @@ import { AuthModule } from 'src/auth/auth.module';
 import { LeadsModule } from 'src/leads/leads.module';
 import { EnrollmentModule } from 'src/enrollment/enrollment.module';
 import { CampaingsModule } from 'src/campaings/campaing.module';
+import { TasksModule } from 'src/tasks/tasks.module';
 @Module({
   imports: [
     LoggerModule.forRoot({
@@ -71,6 +72,7 @@ import { CampaingsModule } from 'src/campaings/campaing.module';
     LeadsModule,
     EnrollmentModule,
     CampaingsModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [
