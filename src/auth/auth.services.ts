@@ -43,19 +43,16 @@ export class AuthService {
     }
 
     const user = await this.usersService.findByMail(loginRequest.email);
-
     if (!user) {
       throw new NotFoundException(
         'Error, unable to find an account registered with this email!',
       );
     }
-
     try {
       const matches = await this.passwordService.verify(
         user.password,
         loginRequest.password,
       );
-
       if (!matches) {
         throw new UnauthorizedException(
           'Error: The data provided is incorrect !',
