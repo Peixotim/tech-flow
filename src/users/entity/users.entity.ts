@@ -3,11 +3,13 @@ import {
   CreateDateColumn,
   Entity,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { UserRoles } from '../enum/roles.enum';
 import { EnterpriseEntity } from 'src/enterprise/enterprise/enterprise.entity';
+import { TasksEntity } from 'src/tasks/entity/tasks.entity';
 
 @Entity({ name: 'users' })
 export class UsersEntity {
@@ -44,4 +46,7 @@ export class UsersEntity {
     nullable: true,
   })
   enterprise?: EnterpriseEntity;
+
+  @OneToMany(() => TasksEntity, (tasks) => tasks.user)
+  tasks?: TasksEntity[];
 }
