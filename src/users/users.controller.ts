@@ -27,6 +27,8 @@ import { UsersModifyDTO } from './DTOs/users-modify.dto';
 import { UsersResponseDTO } from './DTOs/users-create-response.dto';
 import { CurrentUser } from 'src/auth/decorators/current-user.decorator';
 import { UserCreateViewerDTO } from './DTOs/users-create-viewer.dto';
+import { UpdateAvatarDTO } from './DTOs/users-avatar.dto';
+import { ChangePasswordDTO } from './DTOs/users-change-password.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -79,6 +81,32 @@ export class UsersController {
   })
   public async getAllUsers(): Promise<UsersEntity[] | null> {
     return await this.usersService.getAllUsers();
+  }
+
+  @Patch('avatar')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update user avatar configuration' })
+  @ApiResponse({ status: 200, description: 'Avatar updated successfully.' })
+  public async updateAvatar(
+    @CurrentUser() user: { uuid: string },
+    @Body() avatarConfig: UpdateAvatarDTO,
+  ) {
+    await this.usersService.updateAvatar(user.uuid, avatarConfig);
+    return { message: 'Avatar updated successfully!' };
+  }
+
+  @Patch('change-password')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully.' })
+  @ApiResponse({ status: 403, description: 'Old password does not match.' })
+  public async changePassword(
+    @CurrentUser() user: { uuid: string },
+    @Body() changePasswordDto: ChangePasswordDTO,
+  ) {
+    return await this.usersService.changePassword(user.uuid, changePasswordDto);
   }
 
   @Patch(':uuid')
