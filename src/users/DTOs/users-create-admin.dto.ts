@@ -41,7 +41,7 @@ export class UserCreateAdminDTO {
   })
   @IsString({ message: 'Password must be a valid text.' })
   @IsNotEmpty({ message: 'Password is required.' })
-  @MinLength(12, { message: 'Password must be at least 12 characters long.' })
+  @MinLength(8, { message: 'A senha deve ter no mínimo 8 caracteres.' })
   @MaxLength(72, { message: 'Password must be at most 72 characters long.' })
   password: string;
 
