@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRoles } from '../enum/roles.enum';
+import type { AvatarConfig } from '../types/users-avatar-config.types';
+
 export class UsersResponseDTO {
   @ApiProperty({
     description: 'ID único do usuário',
@@ -24,4 +26,23 @@ export class UsersResponseDTO {
     example: '40.432.544/0001-47',
   })
   enterpriseCnpj: string;
+
+  // --- NOVOS CAMPOS ---
+  @ApiPropertyOptional({
+    description: 'Configuração visual do avatar 3D',
+    example: { characterId: 'ninja', background: 'bg-zinc-900', aura: 'fire' },
+  })
+  avatarConfig?: AvatarConfig;
+
+  @ApiPropertyOptional({ description: 'Nível atual do usuário', example: 5 })
+  level?: number;
+
+  @ApiPropertyOptional({ description: 'Experiência acumulada', example: 1250 })
+  experiencePoints?: number;
+
+  @ApiPropertyOptional({
+    description: 'Itens desbloqueados',
+    example: ['ninja', 'fire'],
+  })
+  unlockedItems?: string[];
 }
